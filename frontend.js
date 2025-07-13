@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://kids-guardian.onrender.com'; // substitua pela sua real
+const API_BASE_URL = 'https://kids-guardian.onrender.com/api'; // substitua pela sua real
 let relatorioAtual = [];
 
 // Utils
