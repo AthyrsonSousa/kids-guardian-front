@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kids Guardian - Sistema de Registro</title>
+
+  <!-- Manifesto PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f4c81" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Kids Guardian" />
+
+  <!-- Ícones -->
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>KIDS GUARDIAN</h1>
+      <p>🏠 Ministério Infantil - Aliança</p>
+    </header>
+
+    <main class="main-content">
+      <!-- Seção de Login -->
+      <section id="loginSection" class="login-section active">
+        <form class="login-form" id="formLogin">
+          <h2>Fazer Login</h2>
+          <div id="loginMessage" class="message"></div>
+          <div class="form-group">
+            <label for="inputLoginUsuario">Nome de Usuário:</label>
+            <input type="text" id="inputLoginUsuario" name="usuario" required />
+          </div>
+          <div class="form-group">
+            <label for="inputLoginSenha">Senha:</label>
+            <input type="password" id="inputLoginSenha" name="senha" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+      </section>
+
+      <!-- Seção de Dashboard -->
+      <section id="dashboardSection" class="dashboard">
+        <div class="dashboard-header">
+          <div class="user-info">
+            <div id="displayUsuarioLogado"></div>
+            <div id="displayCargoUsuario"></div>
+          </div>
+          <button id="btnLogout" class="btn btn-danger">Sair</button>
+        </div>
+
+        <div class="dashboard-grid">
+          <div id="dashboardMessage" class="message grid-full-width"></div>
+
+          <!-- Painel Check-in e Check-out -->
+          <div class="dashboard-panel check-io-lists">
+            <div class="checkin-section">
+              <h2>Check-in</h2>
+              <div id="checkinMessage" class="message"></div>
+              <ul id="listaCheckin" class="crianca-list"></ul>
+            </div>
+            <div class="checkout-section">
+              <h2>Check-out</h2>
+              <div id="checkoutMessage" class="message"></div>
+              <ul id="listaCheckout" class="crianca-list"></ul>
+            </div>
+          </div>
+
+          <!-- Painel de Estatísticas -->
+          <div class="dashboard-panel stats-section">
+            <h3>Estatísticas</h3>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <p>Cadastradas:</p>
+                <span id="statCadastradas" class="stat-value">0</span>
+              </div>
+              <div class="stat-item">
+                <p>Presentes Hoje:</p>
+                <span id="statPresentes" class="stat-value">0</span>
+              </div>
+              <div class="stat-item">
+                <p>Check-ins Hoje:</p>
+                <span id="statCheckins" class="stat-value">0</span>
+              </div>
+              <div class="stat-item">
+                <p>Check-outs Hoje:</p>
+                <span id="statCheckouts" class="stat-value">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Painel de Ações -->
+          <div class="dashboard-panel actions-section">
+            <h3>Gerenciar</h3>
+            <div class="action-buttons-grid">
+              <button id="btnAbrirCadastroCrianca" class="btn btn-primary">Cadastrar Criança</button>
+              <button id="btnAbrirGerenciarUsuarios" class="btn btn-secondary">Gerenciar Usuários</button>
+              <button id="btnAbrirRelatorio" class="btn btn-info">Relatório do Dia</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Cadastro de Criança -->
+  <div id="modalCadastroCrianca" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" data-close="modalCadastroCrianca">&times;</span>
+      <h2>Cadastrar Criança</h2>
+      <div id="messageCadastroCrianca" class="message"></div>
+      <form id="formCadastroCrianca">
+        <div class="form-group">
+          <label for="inputCriancaNome">Nome:</label>
+          <input type="text" id="inputCriancaNome" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaResponsavel">Responsável:</label>
+          <input type="text" id="inputCriancaResponsavel" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaNumero">Telefone:</label>
+          <input type="text" id="inputCriancaNumero" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaIdade">Idade:</label>
+          <input type="number" id="inputCriancaIdade" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaSala">Sala:</label>
+          <select id="inputCriancaSala" required>
+            <option value="">Selecione</option>
+            <option value="1">Sala 1 (0 - 3 anos)</option>
+            <option value="2">Sala 2 (4 - 6 anos)</option>
+            <option value="3">Sala 3 (7 - 9 anos)</option>
+            <option value="4">Sala 4 (10 - 12 anos)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaObs">Observações:</label>
+          <textarea id="inputCriancaObs"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Cadastrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Gerenciar Usuários -->
+  <div id="modalGerenciarUsuarios" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" data-close="modalGerenciarUsuarios">&times;</span>
+      <h2>Gerenciar Usuários</h2>
+      <div id="messageUsuarios" class="message"></div>
+
+      <h3>Novo Usuário</h3>
+      <form id="formCadastroUsuario">
+        <div class="form-group">
+          <label for="inputUsuarioNome">Nome:</label>
+          <input type="text" id="inputUsuarioNome" required />
+        </div>
+        <div class="form-group">
+          <label for="inputUsuarioSenha">Senha:</label>
+          <input type="password" id="inputUsuarioSenha" required />
+        </div>
+        <div class="form-group">
+          <label for="inputUsuarioTipo">Tipo:</label>
+          <select id="inputUsuarioTipo" required>
+            <option value="">Selecione</option>
+            <option value="administrador">Administrador</option>
+            <option value="voluntario">Voluntário</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </form>
+
+      <h3>Usuários Cadastrados</h3>
+      <ul id="listaUsuarios" class="user-list"></ul>
+    </div>
+  </div>
+
+  <!-- Modal: Relatório -->
+  <div id="modalRelatorio" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" data-close="modalRelatorio">&times;</span>
+      <h2>Relatório do Dia</h2>
+      <div id="messageRelatorio" class="message"></div>
+      <div class="form-group">
+        <label for="inputDataRelatorio">Data:</label>
+        <input type="date" id="inputDataRelatorio" required />
+      </div>
+      <button id="btnGerarRelatorio" class="btn btn-success">Gerar</button>
+      <button id="btnExportarRelatorio" class="btn btn-secondary">Exportar</button>
+      <h3>Dados:</h3>
+      <pre id="relatorioConteudo" class="report-content"></pre>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="frontend.js"></script>
+</body>
+</html>
