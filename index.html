@@ -27,24 +27,20 @@
     </header>
 
     <main class="main-content">
-      <!-- Seção de Login -->
+      <!-- Login -->
       <section id="loginSection" class="login-section active">
-        <form class="login-form" id="formLogin">
+        <form id="formLogin" class="login-form">
           <h2>Fazer Login</h2>
           <div id="loginMessage" class="message"></div>
-          <div class="form-group">
-            <label for="inputLoginUsuario">Nome de Usuário:</label>
-            <input type="text" id="inputLoginUsuario" name="usuario" required />
-          </div>
-          <div class="form-group">
-            <label for="inputLoginSenha">Senha:</label>
-            <input type="password" id="inputLoginSenha" name="senha" required />
-          </div>
+          <label for="inputLoginUsuario">Usuário</label>
+          <input type="text" id="inputLoginUsuario" required />
+          <label for="inputLoginSenha">Senha</label>
+          <input type="password" id="inputLoginSenha" required />
           <button type="submit" class="btn btn-primary">Entrar</button>
         </form>
       </section>
 
-      <!-- Seção de Dashboard -->
+      <!-- Dashboard -->
       <section id="dashboardSection" class="dashboard">
         <div class="dashboard-header">
           <div class="user-info">
@@ -55,152 +51,96 @@
         </div>
 
         <div class="dashboard-grid">
-          <div id="dashboardMessage" class="message grid-full-width"></div>
-
-          <!-- Painel Check-in e Check-out -->
           <div class="dashboard-panel check-io-lists">
-            <div class="checkin-section">
+            <div>
               <h2>Check-in</h2>
               <div id="checkinMessage" class="message"></div>
               <ul id="listaCheckin" class="crianca-list"></ul>
             </div>
-            <div class="checkout-section">
+            <div>
               <h2>Check-out</h2>
               <div id="checkoutMessage" class="message"></div>
               <ul id="listaCheckout" class="crianca-list"></ul>
             </div>
           </div>
 
-          <!-- Painel de Estatísticas -->
           <div class="dashboard-panel stats-section">
             <h3>Estatísticas</h3>
             <div class="stats-grid">
-              <div class="stat-item">
-                <p>Cadastradas:</p>
-                <span id="statCadastradas" class="stat-value">0</span>
-              </div>
-              <div class="stat-item">
-                <p>Presentes Hoje:</p>
-                <span id="statPresentes" class="stat-value">0</span>
-              </div>
-              <div class="stat-item">
-                <p>Check-ins Hoje:</p>
-                <span id="statCheckins" class="stat-value">0</span>
-              </div>
-              <div class="stat-item">
-                <p>Check-outs Hoje:</p>
-                <span id="statCheckouts" class="stat-value">0</span>
-              </div>
+              <div><p>Cadastradas</p><span id="statCadastradas">0</span></div>
+              <div><p>Presentes Hoje</p><span id="statPresentes">0</span></div>
+              <div><p>Check-ins</p><span id="statCheckins">0</span></div>
+              <div><p>Check-outs</p><span id="statCheckouts">0</span></div>
             </div>
           </div>
 
-          <!-- Painel de Ações -->
           <div class="dashboard-panel actions-section">
             <h3>Gerenciar</h3>
-            <div class="action-buttons-grid">
-              <button id="btnAbrirCadastroCrianca" class="btn btn-primary">Cadastrar Criança</button>
-              <button id="btnAbrirGerenciarUsuarios" class="btn btn-secondary">Gerenciar Usuários</button>
-              <button id="btnAbrirRelatorio" class="btn btn-info">Relatório do Dia</button>
-            </div>
+            <button id="btnAbrirCadastroCrianca" class="btn btn-primary">Cadastrar Criança</button>
+            <button id="btnAbrirGerenciarUsuarios" class="btn btn-secondary">Gerenciar Usuários</button>
+            <button id="btnAbrirRelatorio" class="btn btn-info">Relatório do Dia</button>
           </div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Modal: Cadastro de Criança -->
+  <!-- Modais -->
   <div id="modalCadastroCrianca" class="modal">
     <div class="modal-content">
       <span class="close-btn" data-close="modalCadastroCrianca">&times;</span>
       <h2>Cadastrar Criança</h2>
       <div id="messageCadastroCrianca" class="message"></div>
       <form id="formCadastroCrianca">
-        <div class="form-group">
-          <label for="inputCriancaNome">Nome:</label>
-          <input type="text" id="inputCriancaNome" required />
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaResponsavel">Responsável:</label>
-          <input type="text" id="inputCriancaResponsavel" required />
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaNumero">Telefone:</label>
-          <input type="text" id="inputCriancaNumero" required />
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaIdade">Idade:</label>
-          <input type="number" id="inputCriancaIdade" required />
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaSala">Sala:</label>
-          <select id="inputCriancaSala" required>
-            <option value="">Selecione</option>
-            <option value="1">Sala 1 (0 - 3 anos)</option>
-            <option value="2">Sala 2 (4 - 6 anos)</option>
-            <option value="3">Sala 3 (7 - 9 anos)</option>
-            <option value="4">Sala 4 (10 - 12 anos)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaObs">Observações:</label>
-          <textarea id="inputCriancaObs"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Cadastrar</button>
+        <input type="text" id="inputCriancaNome" placeholder="Nome" required />
+        <input type="text" id="inputCriancaResponsavel" placeholder="Responsável" required />
+        <input type="text" id="inputCriancaNumero" placeholder="Telefone" required />
+        <input type="number" id="inputCriancaIdade" placeholder="Idade" required />
+        <select id="inputCriancaSala" required>
+          <option value="">Sala</option>
+          <option value="1">Sala 1 (0-3)</option>
+          <option value="2">Sala 2 (4-6)</option>
+          <option value="3">Sala 3 (7-9)</option>
+          <option value="4">Sala 4 (10-12)</option>
+        </select>
+        <textarea id="inputCriancaObs" placeholder="Observações"></textarea>
+        <button type="submit" class="btn btn-primary">Salvar</button>
       </form>
     </div>
   </div>
 
-  <!-- Modal: Gerenciar Usuários -->
   <div id="modalGerenciarUsuarios" class="modal">
     <div class="modal-content">
       <span class="close-btn" data-close="modalGerenciarUsuarios">&times;</span>
       <h2>Gerenciar Usuários</h2>
       <div id="messageUsuarios" class="message"></div>
-
-      <h3>Novo Usuário</h3>
       <form id="formCadastroUsuario">
-        <div class="form-group">
-          <label for="inputUsuarioNome">Nome:</label>
-          <input type="text" id="inputUsuarioNome" required />
-        </div>
-        <div class="form-group">
-          <label for="inputUsuarioSenha">Senha:</label>
-          <input type="password" id="inputUsuarioSenha" required />
-        </div>
-        <div class="form-group">
-          <label for="inputUsuarioTipo">Tipo:</label>
-          <select id="inputUsuarioTipo" required>
-            <option value="">Selecione</option>
-            <option value="administrador">Administrador</option>
-            <option value="voluntario">Voluntário</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Salvar</button>
+        <input type="text" id="inputUsuarioNome" placeholder="Nome" required />
+        <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
+        <select id="inputUsuarioTipo" required>
+          <option value="">Tipo</option>
+          <option value="administrador">Administrador</option>
+          <option value="voluntario">Voluntário</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Adicionar</button>
       </form>
-
-      <h3>Usuários Cadastrados</h3>
       <ul id="listaUsuarios" class="user-list"></ul>
     </div>
   </div>
 
-  <!-- Modal: Relatório -->
   <div id="modalRelatorio" class="modal">
     <div class="modal-content">
       <span class="close-btn" data-close="modalRelatorio">&times;</span>
       <h2>Relatório do Dia</h2>
       <div id="messageRelatorio" class="message"></div>
-      <div class="form-group">
-        <label for="inputDataRelatorio">Data:</label>
-        <input type="date" id="inputDataRelatorio" required />
-      </div>
+      <input type="date" id="inputDataRelatorio" required />
       <button id="btnGerarRelatorio" class="btn btn-success">Gerar</button>
       <button id="btnExportarRelatorio" class="btn btn-secondary">Exportar</button>
-      <h3>Dados:</h3>
       <pre id="relatorioConteudo" class="report-content"></pre>
     </div>
   </div>
 
-  <!-- JavaScript -->
+  <!-- JS -->
   <script src="frontend.js"></script>
 </body>
 </html>
