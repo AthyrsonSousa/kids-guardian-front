@@ -1,9 +1,8 @@
-const API_BASE_URL = 'https://kids-guardian.onrender.com/api'; // substitua pela sua real
+const API_BASE_URL = 'https://kids-guardian.onrender.com/api';
 let relatorioAtual = [];
 
-// Utils
+// Utilitários DOM
 const getEl = id => document.getElementById(id);
-
 const showMessage = (id, msg, tipo = '') => {
   const el = getEl(id);
   if (!el) return;
@@ -40,7 +39,7 @@ async function makeApiRequest(endpoint, method, data = null) {
   return response.json();
 }
 
-// Login e Sessão
+// Sessão
 async function handleLogin(e) {
   e.preventDefault();
   const username = getEl('inputLoginUsuario').value;
@@ -65,9 +64,9 @@ function logoutUsuario() {
 }
 
 function updateDashboardUI() {
+  const user = JSON.parse(localStorage.getItem('user'));
   const loginSection = getEl('loginSection');
   const dashboardSection = getEl('dashboardSection');
-  const user = JSON.parse(localStorage.getItem('user'));
 
   if (user) {
     loginSection.style.display = 'none';
@@ -87,47 +86,40 @@ function updateDashboardUI() {
 }
 
 function checkLoginStatus() {
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  token && user ? updateDashboardUI() : updateDashboardUI();
+  localStorage.getItem('token') && localStorage.getItem('user')
+    ? updateDashboardUI()
+    : updateDashboardUI();
 }
 
-// Dashboard - Carregamento de dados
+// Dashboard
 async function carregarDadosDashboard() {
   await carregarListaCheckin();
   await carregarListaCheckout();
   await carregarEstatisticas();
 }
 
+// Crianças
 async function cadastrarCrianca(e) {
   e.preventDefault();
+  const data = {
+    nome: getEl('inputCriancaNome').value,
+    nome_responsavel: getEl('inputCriancaResponsavel').value,
+    numero_responsavel: getEl('inputCriancaNumero').value,
+    idade: parseInt(getEl('inputCriancaIdade').value),
+    sala: parseInt(getEl('inputCriancaSala').value),
+    observacoes: getEl('inputCriancaObs').value
+  };
 
-  const nome = document.getElementById('inputCriancaNome').value;
-  const nome_responsavel = document.getElementById('inputCriancaResponsavel').value;
-  const numero_responsavel = document.getElementById('inputCriancaNumero').value;
-  const idade = parseInt(document.getElementById('inputCriancaIdade').value);
-  const sala = parseInt(document.getElementById('inputCriancaSala').value);
-  const observacoes = document.getElementById('inputCriancaObs').value;
-
-  const res = await makeApiRequest('/criancas/cadastrar', 'POST', {
-    nome,
-    nome_responsavel,
-    numero_responsavel,
-    idade,
-    sala,
-    observacoes
-  });
-
+  const res = await makeApiRequest('/criancas/cadastrar', 'POST', data);
   showMessage('messageCadastroCrianca', res.message || 'Erro ao cadastrar.', res.success ? 'success' : 'error');
 
   if (res.success) {
-    document.getElementById('formCadastroCrianca').reset();
+    getEl('formCadastroCrianca').reset();
     closeModal('modalCadastroCrianca');
-    carregarDadosDashboard(); // atualiza check-in/check-out
+    carregarDadosDashboard();
   }
 }
 
-// Carregar lista de crianças para check-in
 async function carregarListaCheckin() {
   const lista = getEl('listaCheckin');
   if (!lista) return;
@@ -149,18 +141,16 @@ async function carregarListaCheckin() {
     } else {
       lista.innerHTML = '<li>Nenhuma criança encontrada para check-in.</li>';
     }
-  } catch (err) {
+  } catch {
     lista.innerHTML = '<li>Erro ao carregar lista para check-in.</li>';
   }
 }
 
-// Carregar lista de crianças para check-out
 async function carregarListaCheckout() {
   const lista = getEl('listaCheckout');
   if (!lista) return;
   lista.innerHTML = '<li>Carregando...</li>';
   try {
-    // Evita cache da API
     const res = await makeApiRequest(`/criancas/checkout?ts=${Date.now()}`, 'GET');
     lista.innerHTML = '';
     if (res.success && res.criancas.length) {
@@ -176,13 +166,11 @@ async function carregarListaCheckout() {
     } else {
       lista.innerHTML = '<li>Nenhuma criança encontrada para check-out.</li>';
     }
-  } catch (err) {
-    console.error('Erro no carregarListaCheckout:', err);
+  } catch {
     lista.innerHTML = '<li>Erro ao carregar lista para check-out.</li>';
   }
 }
 
-// Carregar estatísticas para o dashboard
 async function carregarEstatisticas() {
   const res = await makeApiRequest('/registros/estatisticas', 'GET');
   if (res.success) {
@@ -193,82 +181,34 @@ async function carregarEstatisticas() {
   }
 }
 
-// Ações: Check-in da criança
 async function checkinCrianca(id) {
   const res = await makeApiRequest('/registros/checkin', 'POST', { crianca_id: id });
   showMessage('checkinMessage', res.message || 'Erro no check-in.', res.success ? 'success' : 'error');
-
-  if (res.success) {
-    // Remove da lista de check-in
-    const liCheckin = document.querySelector(`#listaCheckin [data-id="${id}"]`)?.closest('li');
-    if (liCheckin) liCheckin.remove();
-
-    // Recarrega apenas a criança recém adicionada no check-out
-    const resAtualizado = await makeApiRequest('/criancas', 'GET');
-    if (resAtualizado.success) {
-      const crianca = resAtualizado.criancas.find(c => c.id === parseInt(id));
-      if (crianca) {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span>${crianca.nome} (Sala ${crianca.sala})</span>
-          <div class="crianca-actions">
-            <button class="btn btn-checkout btn-small" data-id="${crianca.id}">Check-out</button>
-          </div>`;
-        getEl('listaCheckout').appendChild(li);
-      }
-    }
-
-    await carregarEstatisticas();
-  }
+  if (res.success) carregarDadosDashboard();
 }
 
-// Ações: Check-out da criança
 async function checkoutCrianca(id) {
   const res = await makeApiRequest('/registros/checkout', 'POST', { crianca_id: id });
   showMessage('checkoutMessage', res.message || 'Erro no check-out.', res.success ? 'success' : 'error');
-
-  if (res.success) {
-    // Remove da lista de check-out
-    const liCheckout = document.querySelector(`#listaCheckout [data-id="${id}"]`)?.closest('li');
-    if (liCheckout) liCheckout.remove();
-
-    // Recarrega apenas a criança recém adicionada ao check-in
-    const resAtualizado = await makeApiRequest('/criancas', 'GET');
-    if (resAtualizado.success) {
-      const crianca = resAtualizado.criancas.find(c => c.id === parseInt(id));
-      if (crianca && crianca.is_active) {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span>${crianca.nome} (Sala ${crianca.sala})</span>
-          <div class="crianca-actions">
-            <button class="btn btn-checkin btn-small" data-id="${crianca.id}">Check-in</button>
-            <button class="btn btn-danger btn-small" data-id="${crianca.id}" data-remover>Desativar</button>
-          </div>`;
-        getEl('listaCheckin').appendChild(li);
-      }
-    }
-
-    await carregarEstatisticas();
-  }
+  if (res.success) carregarDadosDashboard();
 }
 
-// Ações: Remover/desativar criança
 async function removerCrianca(id) {
   if (!confirm('Deseja desativar esta criança?')) return;
   const res = await makeApiRequest(`/criancas/${id}`, 'DELETE');
   showMessage('gerenciarCriancasMessage', res.message || 'Erro ao remover.', res.success ? 'success' : 'error');
-  if (res.success) {
-    carregarDadosDashboard();
-  }
+  if (res.success) carregarDadosDashboard();
 }
 
-// Usuários - Adicionar novo usuário
+// Usuários
 async function adicionarUsuario(e) {
   e.preventDefault();
-  const nome = getEl('inputUsuarioNome').value;
-  const senha = getEl('inputUsuarioSenha').value;
-  const tipo = getEl('inputUsuarioTipo').value;
-  const res = await makeApiRequest('/usuarios/cadastrar', 'POST', { nome, senha, tipo });
+  const data = {
+    nome: getEl('inputUsuarioNome').value,
+    senha: getEl('inputUsuarioSenha').value,
+    tipo: getEl('inputUsuarioTipo').value
+  };
+  const res = await makeApiRequest('/usuarios/cadastrar', 'POST', data);
   showMessage('messageUsuarios', res.message || 'Erro ao cadastrar.', res.success ? 'success' : 'error');
   if (res.success) {
     getEl('formCadastroUsuario').reset();
@@ -276,7 +216,6 @@ async function adicionarUsuario(e) {
   }
 }
 
-// Usuários - Carregar lista de usuários
 async function carregarUsuarios() {
   const lista = getEl('listaUsuarios');
   const res = await makeApiRequest('/usuarios', 'GET');
@@ -292,7 +231,6 @@ async function carregarUsuarios() {
   }
 }
 
-// Usuários - Remover usuário
 async function removerUsuario(id) {
   if (!confirm('Remover este usuário?')) return;
   const res = await makeApiRequest(`/usuarios/${id}`, 'DELETE');
@@ -300,7 +238,7 @@ async function removerUsuario(id) {
   if (res.success) carregarUsuarios();
 }
 
-// Relatório - Gerar relatório do dia
+// Relatórios
 async function gerarRelatorio() {
   const data = getEl('inputDataRelatorio').value;
   if (!data) return showMessage('messageRelatorio', 'Selecione uma data.', 'warning');
@@ -314,7 +252,6 @@ async function gerarRelatorio() {
   }
 }
 
-// Relatório - Exportar relatório (app desktop)
 async function exportarRelatorio() {
   const data = getEl('inputDataRelatorio').value;
   if (!data || !relatorioAtual.length) return showMessage('messageRelatorio', 'Gere o relatório antes.', 'warning');
@@ -326,16 +263,20 @@ async function exportarRelatorio() {
   }
 }
 
-// Eventos DOM
+// DOM Ready
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log('[PWA] Service Worker registrado:', reg.scope))
+      .catch(err => console.error('[PWA] Falha ao registrar Service Worker:', err));
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   checkLoginStatus();
-
-  // Formulários
   getEl('formLogin')?.addEventListener('submit', handleLogin);
   getEl('formCadastroCrianca')?.addEventListener('submit', cadastrarCrianca);
   getEl('formCadastroUsuario')?.addEventListener('submit', adicionarUsuario);
-
-  // Botões principais
   getEl('btnLogout')?.addEventListener('click', logoutUsuario);
   getEl('btnAbrirCadastroCrianca')?.addEventListener('click', () => openModal('modalCadastroCrianca'));
   getEl('btnAbrirGerenciarUsuarios')?.addEventListener('click', () => {
@@ -345,47 +286,20 @@ document.addEventListener('DOMContentLoaded', () => {
   getEl('btnAbrirRelatorio')?.addEventListener('click', () => openModal('modalRelatorio'));
   getEl('btnGerarRelatorio')?.addEventListener('click', gerarRelatorio);
   getEl('btnExportarRelatorio')?.addEventListener('click', exportarRelatorio);
-
-  // Fechar modais
   document.querySelectorAll('.close-btn').forEach(btn => {
     btn.addEventListener('click', () => closeModal(btn.dataset.close));
   });
-
-  // Ações em listas de crianças (check-in, check-out, desativar)
-  ['listaCheckin', 'listaCheckout'].forEach(listaId => {
-    getEl(listaId)?.addEventListener('click', e => {
-      const criancaId = e.target.dataset.id;
-      if (!criancaId) return;
-
-      if (e.target.classList.contains('btn-checkin')) {
-        checkinCrianca(criancaId);
-      } else if (e.target.classList.contains('btn-checkout')) {
-        checkoutCrianca(criancaId);
-      } else if (e.target.hasAttribute('data-remover')) {
-        removerCrianca(criancaId);
-      }
+  ['listaCheckin', 'listaCheckout'].forEach(id => {
+    getEl(id)?.addEventListener('click', e => {
+      const idCrianca = e.target.dataset.id;
+      if (!idCrianca) return;
+      if (e.target.classList.contains('btn-checkin')) checkinCrianca(idCrianca);
+      else if (e.target.classList.contains('btn-checkout')) checkoutCrianca(idCrianca);
+      else if (e.target.hasAttribute('data-remover')) removerCrianca(idCrianca);
     });
   });
-
-  // Ações em lista de usuários
   getEl('listaUsuarios')?.addEventListener('click', e => {
     const userId = e.target.dataset.id;
-    if (e.target.hasAttribute('data-remover-usuario')) {
-      removerUsuario(userId);
-    }
+    if (e.target.hasAttribute('data-remover-usuario')) removerUsuario(userId);
   });
-
 });
-
-  // Registrar Service Worker (PWA)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => {
-        console.log('[Service Worker] Registrado com sucesso:', reg.scope);
-      })
-      .catch(err => {
-        console.error('[Service Worker] Falha ao registrar:', err);
-      });
-  });
-}
