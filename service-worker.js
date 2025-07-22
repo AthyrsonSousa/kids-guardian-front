@@ -17,8 +17,15 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const { request } = event;
+
+  // ❌ Não interceptar requisições POST ou chamadas à API
+  if (request.method !== 'GET' || request.url.includes('/api/')) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    caches.match(request)
+      .then(response => response || fetch(request))
   );
 });
