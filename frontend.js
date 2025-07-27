@@ -263,7 +263,7 @@ async function exportarRelatorio() {
   }
 }
 
-// DOM Ready
+// Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
@@ -272,6 +272,54 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Instalação PWA
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  const btnInstall = getEl('btnInstalarApp');
+  if (btnInstall) {
+    // Evita múltiplos event listeners
+    if (!btnInstall.dataset.listenerAttached) {
+      btnInstall.style.display = 'block';
+      btnInstall.addEventListener('click', async () => {
+        btnInstall.style.display = 'none';
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('[PWA] Instalação aceita');
+        } else {
+          console.log('[PWA] Instalação recusada');
+          btnInstall.style.display = 'block';
+        }
+        deferredPrompt = null;
+      });
+      btnInstall.dataset.listenerAttached = 'true';
+    }
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('[PWA] Aplicativo instalado com sucesso');
+  const btn = getEl('btnInstalarApp');
+  if (btn) {
+    btn.style.display = 'none';
+    delete btn.dataset.listenerAttached;
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('[PWA] Aplicativo instalado com sucesso');
+  const btn = getEl('btnInstalarApp');
+  if (btn) {
+    btn.classList.remove('show');
+    btn.style.display = 'none'; // Esconde o botão após instalação
+  }
+});
+
+// DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
   checkLoginStatus();
   getEl('formLogin')?.addEventListener('submit', handleLogin);
@@ -286,9 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
   getEl('btnAbrirRelatorio')?.addEventListener('click', () => openModal('modalRelatorio'));
   getEl('btnGerarRelatorio')?.addEventListener('click', gerarRelatorio);
   getEl('btnExportarRelatorio')?.addEventListener('click', exportarRelatorio);
+
   document.querySelectorAll('.close-btn').forEach(btn => {
     btn.addEventListener('click', () => closeModal(btn.dataset.close));
   });
+
   ['listaCheckin', 'listaCheckout'].forEach(id => {
     getEl(id)?.addEventListener('click', e => {
       const idCrianca = e.target.dataset.id;
@@ -298,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (e.target.hasAttribute('data-remover')) removerCrianca(idCrianca);
     });
   });
+
   getEl('listaUsuarios')?.addEventListener('click', e => {
     const userId = e.target.dataset.id;
     if (e.target.hasAttribute('data-remover-usuario')) removerUsuario(userId);
