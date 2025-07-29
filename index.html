@@ -27,18 +27,25 @@
     </header>
 
     <main class="main-content">
-      <!-- Login -->
-      <section id="loginSection" class="login-section active">
-        <form id="formLogin" class="login-form">
-          <h2>Fazer Login</h2>
-          <div id="loginMessage" class="message"></div>
-          <label for="inputLoginUsuario">Usuário</label>
-          <input type="text" id="inputLoginUsuario" required />
-          <label for="inputLoginSenha">Senha</label>
-          <input type="password" id="inputLoginSenha" required />
-          <button type="submit" class="btn btn-primary">Entrar</button>
-        </form>
-      </section>
+     <!-- Login -->
+<section id="loginSection" class="login-section active">
+  <form id="formLogin" class="login-form">
+    <h2 style="text-align: center; color: #2e7d32;">Fazer Login</h2>
+    <div id="loginMessage" class="message"></div>
+
+    <div class="form-group">
+      <label for="inputLoginUsuario">Usuário</label>
+      <input type="text" id="inputLoginUsuario" placeholder="Digite seu usuário" required />
+    </div>
+
+    <div class="form-group">
+      <label for="inputLoginSenha">Senha</label>
+      <input type="password" id="inputLoginSenha" placeholder="Digite sua senha" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Entrar</button>
+  </form>
+</section>
 
       <!-- Dashboard -->
       <section id="dashboardSection" class="dashboard">
