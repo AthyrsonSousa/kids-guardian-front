@@ -2,295 +2,68 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Kids Guardian - Sistema de Registro</title>
-
-  <!-- Manifesto para PWA -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0f4c81" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Kids Guardian" />
-
-  <!-- Ícones -->
-  <link rel="icon" type="image/png" href="icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <title>Kids Guardian</title>
 </head>
 <body>
-  <div class="container">
+  <main id="login" class="centered">
+    <form id="login-form">
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="E-mail" required />
+      <input type="password" id="password" placeholder="Senha" required />
+      <button type="submit" class="btn primary">Entrar</button>
+    </form>
+  </main>
 
-    <header class="header" role="banner">
-      <h1>KIDS GUARDIAN</h1>
-      <p>🏠 Ministério Infantil - Aliança</p>
+  <section id="dashboard" class="hidden">
+    <header>
+      <h1>Kids Guardian</h1>
+      <button id="logout" class="btn danger">Sair</button>
     </header>
+    <nav>
+      <button id="btn-cadastro" class="btn">Cadastro de Criança</button>
+      <button id="btn-relatorio" class="btn">Relatório</button>
+      <button id="btn-gerenciar" class="btn">Gerenciar Usuários</button>
+    </nav>
 
-    <main class="main-content" role="main">
-
-      <!-- Login Section -->
-      <section id="loginSection" class="login-section" aria-label="Formulário de Login">
-        <form id="formLogin" class="login-form" autocomplete="on" novalidate>
-          <h2 class="text-center text-success">Fazer Login</h2>
-          <div id="loginMessage" class="message" role="alert" aria-live="assertive"></div>
-
-          <div class="form-group">
-            <label for="inputLoginUsuario">Usuário</label>
-            <div class="input-icon-group">
-              <span class="icon" aria-hidden="true">👤</span>
-              <input
-                type="text"
-                id="inputLoginUsuario"
-                name="usuario"
-                required
-                autocomplete="username"
-                aria-required="true"
-                placeholder="Digite seu usuário"
-              />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="inputLoginSenha">Senha</label>
-            <div class="input-icon-group">
-              <span class="icon" aria-hidden="true">🔒</span>
-              <input
-                type="password"
-                id="inputLoginSenha"
-                name="senha"
-                required
-                autocomplete="current-password"
-                aria-required="true"
-                placeholder="Digite sua senha"
-              />
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary" aria-label="Entrar no sistema">Entrar</button>
-          <div id="loginLoading" class="loading-spinner visually-hidden" aria-live="polite" aria-hidden="true"></div>
-        </form>
-      </section>
-
-      <!-- Dashboard Section (inicialmente escondido) -->
-      <section id="dashboardSection" class="dashboard hidden" aria-label="Painel de Controle do Sistema" tabindex="-1">
-        <div class="dashboard-header">
-          <div class="user-info" aria-live="polite">
-            <div id="displayUsuarioLogado"></div>
-            <div id="displayCargoUsuario"></div>
-          </div>
-          <button id="btnLogout" class="btn btn-danger" aria-label="Sair do sistema">Sair</button>
-        </div>
-
-        <div class="dashboard-grid">
-
-          <!-- Check-in / Check-out -->
-          <div class="dashboard-panel check-io-lists" aria-label="Listas de check-in e check-out">
-
-            <section aria-labelledby="tituloCheckin">
-              <h2 id="tituloCheckin">Check-in</h2>
-              <div id="checkinMessage" class="message" role="alert" aria-live="assertive"></div>
-              <ul id="listaCheckin" class="crianca-list" aria-live="polite" aria-relevant="additions removals"></ul>
-            </section>
-
-            <section aria-labelledby="tituloCheckout">
-              <h2 id="tituloCheckout">Check-out</h2>
-              <div id="checkoutMessage" class="message" role="alert" aria-live="assertive"></div>
-              <ul id="listaCheckout" class="crianca-list" aria-live="polite" aria-relevant="additions removals"></ul>
-            </section>
-
-          </div>
-
-          <!-- Estatísticas -->
-          <div class="dashboard-panel stats-section" aria-label="Estatísticas do sistema">
-            <h3>Estatísticas</h3>
-            <div class="stats-grid">
-              <div><p>Cadastradas</p><span id="statCadastradas">0</span></div>
-              <div><p>Presentes Hoje</p><span id="statPresentes">0</span></div>
-              <div><p>Check-ins</p><span id="statCheckins">0</span></div>
-              <div><p>Check-outs</p><span id="statCheckouts">0</span></div>
-            </div>
-          </div>
-
-          <!-- Ações -->
-          <div class="dashboard-panel actions-section" aria-label="Ações do sistema">
-            <h3>Gerenciar</h3>
-            <button id="btnAbrirCadastroCrianca" class="btn btn-primary" aria-haspopup="dialog" aria-controls="modalCadastroCrianca">
-              Cadastrar Criança
-            </button>
-            <button id="btnAbrirGerenciarUsuarios" class="btn btn-secondary" aria-haspopup="dialog" aria-controls="modalGerenciarUsuarios">
-              Gerenciar Usuários
-            </button>
-            <button id="btnAbrirRelatorio" class="btn btn-info" aria-haspopup="dialog" aria-controls="modalRelatorio">
-              Relatório do Dia
-            </button>
-          </div>
-
-        </div>
-
-        <div class="text-center" style="margin-top: 1rem;">
-          <button
-            id="btnInstalarApp"
-            class="btn btn-install"
-            style="display: none;"
-            aria-label="Instalar aplicativo"
-          >
-            📲 Instalar App
-          </button>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- Modal Cadastro Criança -->
-  <div id="modalCadastroCrianca" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tituloCadastroCrianca" tabindex="-1">
-    <div class="modal-content">
-      <button class="close-btn" data-close="modalCadastroCrianca" aria-label="Fechar modal">&times;</button>
-      <h2 id="tituloCadastroCrianca">Cadastrar Criança</h2>
-      <div id="messageCadastroCrianca" class="message" role="alert" aria-live="assertive"></div>
-      <form id="formCadastroCrianca" autocomplete="off" novalidate>
-        <div class="form-group">
-          <label for="inputCriancaNome">Nome</label>
-          <input
-            type="text"
-            id="inputCriancaNome"
-            name="nome"
-            placeholder="Nome"
-            required
-            aria-required="true"
-          />
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaResponsavel">Responsável</label>
-          <input
-            type="text"
-            id="inputCriancaResponsavel"
-            name="responsavel"
-            placeholder="Responsável"
-            required
-            aria-required="true"
-          />
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaNumero">Telefone</label>
-          <input
-            type="tel"
-            id="inputCriancaNumero"
-            name="telefone"
-            placeholder="Telefone"
-            required
-            aria-required="true"
-            pattern="[\d\s()+-]+"
-            title="Digite um telefone válido"
-          />
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaIdade">Idade</label>
-          <input
-            type="number"
-            id="inputCriancaIdade"
-            name="idade"
-            placeholder="Idade"
-            required
-            min="0"
-            max="17"
-            aria-required="true"
-          />
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaSala">Sala</label>
-          <select id="inputCriancaSala" name="sala" required aria-required="true">
-            <option value="">Selecione a sala</option>
-            <option value="1">Sala 1 (0-3)</option>
-            <option value="2">Sala 2 (4-6)</option>
-            <option value="3">Sala 3 (7-9)</option>
-            <option value="4">Sala 4 (10-12)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="inputCriancaObs">Observações</label>
-          <textarea id="inputCriancaObs" name="observacoes" placeholder="Observações" rows="3"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Salvar</button>
+    <section id="cadastro" class="hidden">
+      <h2>Cadastro de Criança</h2>
+      <form id="form-cadastro">
+        <input type="text" id="nome-crianca" placeholder="Nome da Criança" required />
+        <input type="text" id="responsavel" placeholder="Responsável" required />
+        <input type="text" id="turma" placeholder="Turma" required />
+        <button type="submit" class="btn success">Cadastrar</button>
       </form>
-    </div>
-  </div>
+    </section>
 
-  <!-- Modal Gerenciar Usuários -->
-  <div id="modalGerenciarUsuarios" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tituloGerenciarUsuarios" tabindex="-1">
-    <div class="modal-content">
-      <button class="close-btn" data-close="modalGerenciarUsuarios" aria-label="Fechar modal">&times;</button>
-      <h2 id="tituloGerenciarUsuarios">Gerenciar Usuários</h2>
-      <div id="messageUsuarios" class="message" role="alert" aria-live="assertive"></div>
-      <form id="formCadastroUsuario" autocomplete="off" novalidate>
-        <div class="form-group">
-          <label for="inputUsuarioNome">Nome</label>
-          <input
-            type="text"
-            id="inputUsuarioNome"
-            name="nome"
-            placeholder="Nome"
-            required
-            aria-required="true"
-          />
-        </div>
-        <div class="form-group">
-          <label for="inputUsuarioSenha">Senha</label>
-          <input
-            type="password"
-            id="inputUsuarioSenha"
-            name="senha"
-            placeholder="Senha"
-            required
-            aria-required="true"
-            autocomplete="new-password"
-            minlength="6"
-            title="A senha deve ter no mínimo 6 caracteres"
-          />
-        </div>
-        <div class="form-group">
-          <label for="inputUsuarioTipo">Tipo</label>
-          <select id="inputUsuarioTipo" name="tipo" required aria-required="true">
-            <option value="">Selecione o tipo</option>
-            <option value="administrador">Administrador</option>
-            <option value="voluntario">Voluntário</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Adicionar</button>
+    <section id="relatorio" class="hidden">
+      <h2>Relatório de Check-ins</h2>
+      <button id="gerar-relatorio" class="btn info">Gerar Relatório</button>
+      <div id="resultado-relatorio"></div>
+    </section>
+
+    <section id="gerenciar" class="hidden">
+      <h2>Gerenciamento de Usuários</h2>
+      <form id="form-usuario">
+        <input type="email" id="email-usuario" placeholder="E-mail do usuário" required />
+        <select id="tipo-usuario">
+          <option value="admin">Administrador</option>
+          <option value="user">Usuário</option>
+        </select>
+        <button type="submit" class="btn success">Atualizar Permissão</button>
       </form>
-      <ul id="listaUsuarios" class="user-list" aria-live="polite" aria-relevant="additions removals"></ul>
-    </div>
+    </section>
+  </section>
+
+  <div id="installPrompt" class="hidden">
+    <button id="btnInstall" class="btn">Instalar App</button>
   </div>
 
-  <!-- Modal Relatório -->
-  <div id="modalRelatorio" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tituloRelatorio" tabindex="-1">
-    <div class="modal-content">
-      <button class="close-btn" data-close="modalRelatorio" aria-label="Fechar modal">&times;</button>
-      <h2 id="tituloRelatorio">Relatório do Dia</h2>
-      <div id="messageRelatorio" class="message" role="alert" aria-live="assertive"></div>
-      <form id="formRelatorio" novalidate>
-        <div class="form-group">
-          <label for="inputDataRelatorio">Data</label>
-          <input
-            type="date"
-            id="inputDataRelatorio"
-            name="dataRelatorio"
-            required
-            aria-required="true"
-            max=""
-          />
-        </div>
-        <div class="form-actions">
-          <button id="btnGerarRelatorio" type="submit" class="btn btn-success">Gerar</button>
-          <button id="btnExportarRelatorio" type="button" class="btn btn-secondary">Exportar</button>
-        </div>
-      </form>
-      <pre id="relatorioConteudo" class="report-content" aria-live="polite"></pre>
-    </div>
-  </div>
+  <div id="message" class="message hidden"></div>
 
-  <!-- Script principal -->
-  <script src="frontend.js" defer></script>
+  <script src="/frontend.js"></script>
 </body>
 </html>
