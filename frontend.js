@@ -300,6 +300,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   const loginSection = getEl('loginSection');
   const dashboardSection = getEl('dashboardSection');
+
   const btnLogout = getEl('btnLogout');
   const installBtn = getEl('btnInstalarApp');
   const formLogin = getEl('formLogin');
@@ -307,6 +308,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const formCadastroUsuario = getEl('formCadastroUsuario');
   const formRelatorio = getEl('formRelatorio');
 
+  const btnAbrirCadastroCrianca = getEl('btnAbrirCadastroCrianca');
+  const btnAbrirRelatorio = getEl('btnAbrirRelatorio');
+  const btnAbrirGerenciarUsuarios = getEl('btnAbrirGerenciarUsuarios');
+
+  // Verifica se usuário está logado
   if (localStorage.getItem('token')) {
     loginSection.classList.add('hidden');
     dashboardSection.classList.remove('hidden');
@@ -317,6 +323,18 @@ document.addEventListener('DOMContentLoaded', () => {
     dashboardSection.classList.add('hidden');
   }
 
+  // Botões que abrem modais
+  if (btnAbrirCadastroCrianca) {
+    btnAbrirCadastroCrianca.addEventListener('click', () => openModal('modalCadastroCrianca'));
+  }
+  if (btnAbrirRelatorio) {
+    btnAbrirRelatorio.addEventListener('click', () => openModal('modalRelatorio'));
+  }
+  if (btnAbrirGerenciarUsuarios) {
+    btnAbrirGerenciarUsuarios.addEventListener('click', () => openModal('modalGerenciarUsuarios'));
+  }
+
+  // Logout
   if (btnLogout) {
     btnLogout.addEventListener('click', () => {
       localStorage.removeItem('token');
@@ -325,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Instalar PWA
   if (installBtn) {
     installBtn.addEventListener('click', async () => {
       const promptEvent = window.deferredPrompt;
@@ -340,15 +359,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Formulário login
   if (formLogin) {
     formLogin.addEventListener('submit', handleLogin);
   }
 
+  // Formulário cadastro criança
   if (formCadastroCrianca) {
     formCadastroCrianca.addEventListener('submit', cadastrarCrianca);
   }
 
-  // Exemplo para cadastro de usuário (adapte conforme API)
+  // Formulário cadastro usuário
   if (formCadastroUsuario) {
     formCadastroUsuario.addEventListener('submit', async e => {
       e.preventDefault();
@@ -364,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Formulário relatório
   if (formRelatorio) {
     formRelatorio.addEventListener('submit', e => {
       e.preventDefault();
@@ -372,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Delegação para ações dinâmicas de checkin, checkout e remover
+  // Delegação para botões dinâmicos: checkin, checkout, remover e fechar modais
   document.body.addEventListener('click', e => {
     if (e.target.matches('.btn-checkin')) {
       const id = e.target.getAttribute('data-id');
