@@ -82,19 +82,33 @@ function updateDashboardUI() {
   try {
     user = JSON.parse(userStr);
   } catch (e) {
+    console.error("Erro ao processar dados do usuário do localStorage.", e);
     user = null;
   }
-  
-  if (user && user.nome && user.tipo) {
-    getEl('displayUsuarioLogado').textContent = user.nome;
-    getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
 
-    document.querySelectorAll('.admin-only').forEach(el => {
-      el.style.display = user.tipo === 'administrador' ? 'block' : 'none';
-    });
+  const loginSection = getEl('loginSection');
+  const dashboardSection = getEl('dashboardSection');
 
-    carregarDadosDashboard();
+  // Se os dados do usuário não puderem ser recuperados, exibe a tela de login
+  if (!user || !user.nome || !user.tipo) {
+      localStorage.clear();
+      loginSection.classList.remove('hidden');
+      dashboardSection.classList.add('hidden');
+      return;
   }
+
+  // Se os dados do usuário estiverem válidos, exibe o dashboard
+  loginSection.classList.add('hidden');
+  dashboardSection.classList.remove('hidden');
+
+  getEl('displayUsuarioLogado').textContent = user.nome;
+  getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
+
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = user.tipo === 'administrador' ? 'block' : 'none';
+  });
+
+  carregarDadosDashboard();
 }
 
 function checkLoginStatus() {
