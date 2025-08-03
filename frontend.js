@@ -230,29 +230,29 @@ async function removerCrianca(id) {
 
 // Usuários
 async function carregarUsuarios() {
-  const token = localStorage.getItem('token');
   try {
-    const res = await fetch(`${API_BASE_URL}/usuarios`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (!res.ok) throw new Error('Erro ao carregar usuários.');
-
-    const usuarios = await res.json();
+    const res = await makeApiRequest('/usuarios', 'GET');
     const lista = getEl('listaUsuarios');
     if (!lista) return;
 
-    if (usuarios.length === 0) {
-      lista.innerHTML = '<li>Nenhum usuário encontrado.</li>';
+    if (!res.success) {
+      lista.innerHTML = '<li>Erro ao carregar usuários.</li>';
       return;
     }
 
-    lista.innerHTML = '';
-    usuarios.forEach(usuario => {
-      const li = document.createElement('li');
-      li.textContent = `${usuario.nome} - ${usuario.email}`;
-      lista.appendChild(li);
-    });
+    // Verificar diferentes estruturas de resposta
+    let usuarios = res.usuarios || res.data || res;
+    
+    if (!Array.isArray(usuarios)) {
+      console.error('Resposta não é um array:', usuarios);
+      lista.innerHTML = '<li>Formato de resposta inválido.</li>';
+      return;
+    }
+
+    renderLista(lista, usuarios, usuario => `
+      ${usuario.nome} - ${usuario.email || usuario.username || 'N/A'}
+    `, 'Nenhum usuário encontrado.');
+    
   } catch (erro) {
     console.error('Erro ao carregar usuários:', erro);
     showMessage('messageUsuarios', 'Erro ao carregar usuários.', 'error');
