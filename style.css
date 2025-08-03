@@ -48,11 +48,11 @@ body {
 }
 
 /* Ocultar elementos: remover !important e usar seletor mais específico */
-.hidden,
-#dashboardSection,
-#modalCadastroCrianca,
-#modalGerenciarUsuarios,
-#modalRelatorio {
+.hidden {
+  display: none;
+}
+
+#dashboardSection.hidden {
   display: none;
 }
 
