@@ -281,22 +281,25 @@ function gerarRelatorio(dia) {
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   window.deferredPrompt = e;
-  document.getElementById('install-btn').style.display = 'block';
+  const installBtn = document.getElementById('btnInstalarApp');
+  if (installBtn) installBtn.style.display = 'block';
 });
 
-document.getElementById('install-btn').addEventListener('click', () => {
-  const promptEvent = window.deferredPrompt;
-  if (!promptEvent) return;
+const installBtn = document.getElementById('btnInstalarApp');
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    const promptEvent = window.deferredPrompt;
+    if (!promptEvent) return;
 
-  promptEvent.prompt();
-  promptEvent.userChoice.then(choice => {
-    if (choice.outcome === 'accepted') {
+    promptEvent.prompt();
+    const choiceResult = await promptEvent.userChoice;
+    if (choiceResult.outcome === 'accepted') {
       console.log('PWA instalado');
     }
     window.deferredPrompt = null;
-    document.getElementById('install-btn').style.display = 'none';
+    installBtn.style.display = 'none';
   });
-});
+}
 
 // Seção: DOM Ready
 
