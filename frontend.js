@@ -1,5 +1,3 @@
-// Refatorado com melhorias: tratamento de erro robusto, reutilização de código, remoção de duplicações
-
 const API_BASE_URL = 'https://kids-guardian.onrender.com/api';
 let relatorioAtual = [];
 
@@ -231,89 +229,163 @@ async function removerCrianca(id) {
 }
 
 // Usuários
-function carregarUsuarios() {
+async function carregarUsuarios() {
   const token = localStorage.getItem('token');
-  fetch('/usuarios', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-    .then(res => res.ok ? res.json() : Promise.reject(res))
-    .then(usuarios => {
-      const lista = document.getElementById('lista-usuarios');
-      lista.innerHTML = '';
-      usuarios.forEach(usuario => {
-        const li = document.createElement('li');
-        li.textContent = `${usuario.nome} - ${usuario.email}`;
-        lista.appendChild(li);
-      });
-    })
-    .catch(erro => console.error('Erro ao carregar usuários:', erro));
+  try {
+    const res = await fetch(`${API_BASE_URL}/usuarios`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!res.ok) throw new Error('Erro ao carregar usuários.');
+
+    const usuarios = await res.json();
+    const lista = getEl('listaUsuarios');
+    if (!lista) return;
+
+    if (usuarios.length === 0) {
+      lista.innerHTML = '<li>Nenhum usuário encontrado.</li>';
+      return;
+    }
+
+    lista.innerHTML = '';
+    usuarios.forEach(usuario => {
+      const li = document.createElement('li');
+      li.textContent = `${usuario.nome} - ${usuario.email}`;
+      lista.appendChild(li);
+    });
+  } catch (erro) {
+    console.error('Erro ao carregar usuários:', erro);
+    showMessage('messageUsuarios', 'Erro ao carregar usuários.', 'error');
+  }
 }
 
-function gerarRelatorio(dia) {
+async function gerarRelatorio(dia) {
   const token = localStorage.getItem('token');
   const endpoint = dia ? `/relatorio-dia?data=${dia}` : '/relatorio-geral';
 
-  fetch(endpoint, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-    .then(res => res.ok ? res.json() : res.text().then(text => { throw new Error(text); }))
-    .then(relatorio => {
-      const container = document.getElementById('relatorio');
-      container.innerHTML = '';
-      relatorio.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'item-relatorio';
-        div.innerHTML = `
-          <p><strong>Nome:</strong> ${item.nome}</p>
-          <p><strong>Entrada:</strong> ${item.checkin}</p>
-          <p><strong>Saída:</strong> ${item.checkout || 'Não registrado'}</p>
-        `;
-        container.appendChild(div);
-      });
-    })
-    .catch(erro => {
-      console.error('Erro ao gerar relatório:', erro);
-      alert('Erro ao gerar relatório. Verifique se está logado.');
+  try {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
+
+    if (!res.ok) {
+      const texto = await res.text();
+      throw new Error(texto);
+    }
+
+    const relatorio = await res.json();
+    const container = getEl('relatorioConteudo');
+    if (!container) return;
+
+    if (relatorio.length === 0) {
+      container.textContent = 'Nenhum dado encontrado para o relatório.';
+      return;
+    }
+
+    container.textContent = JSON.stringify(relatorio, null, 2);
+  } catch (erro) {
+    console.error('Erro ao gerar relatório:', erro);
+    alert('Erro ao gerar relatório. Verifique se está logado.');
+  }
 }
 
 // Seção: PWA
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   window.deferredPrompt = e;
-  const installBtn = document.getElementById('btnInstalarApp');
+  const installBtn = getEl('btnInstalarApp');
   if (installBtn) installBtn.style.display = 'block';
 });
 
-const installBtn = document.getElementById('btnInstalarApp');
-if (installBtn) {
-  installBtn.addEventListener('click', async () => {
-    const promptEvent = window.deferredPrompt;
-    if (!promptEvent) return;
-
-    promptEvent.prompt();
-    const choiceResult = await promptEvent.userChoice;
-    if (choiceResult.outcome === 'accepted') {
-      console.log('PWA instalado');
-    }
-    window.deferredPrompt = null;
-    installBtn.style.display = 'none';
-  });
-}
-
-// Seção: DOM Ready
-
 document.addEventListener('DOMContentLoaded', () => {
+  const loginSection = getEl('loginSection');
+  const dashboardSection = getEl('dashboardSection');
+  const btnLogout = getEl('btnLogout');
+  const installBtn = getEl('btnInstalarApp');
+  const formLogin = getEl('formLogin');
+  const formCadastroCrianca = getEl('formCadastroCrianca');
+  const formCadastroUsuario = getEl('formCadastroUsuario');
+  const formRelatorio = getEl('formRelatorio');
+
   if (localStorage.getItem('token')) {
-    document.getElementById('app').style.display = 'block';
-    carregarCriancas();
+    loginSection.classList.add('hidden');
+    dashboardSection.classList.remove('hidden');
+    carregarDadosDashboard();
     carregarUsuarios();
   } else {
-    document.getElementById('login').style.display = 'block';
+    loginSection.classList.remove('hidden');
+    dashboardSection.classList.add('hidden');
   }
 
-  document.getElementById('logout').addEventListener('click', () => {
-    localStorage.removeItem('token');
-    location.reload();
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      location.reload();
+    });
+  }
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      const promptEvent = window.deferredPrompt;
+      if (!promptEvent) return;
+
+      promptEvent.prompt();
+      const choiceResult = await promptEvent.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        console.log('PWA instalado');
+      }
+      window.deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+  }
+
+  if (formLogin) {
+    formLogin.addEventListener('submit', handleLogin);
+  }
+
+  if (formCadastroCrianca) {
+    formCadastroCrianca.addEventListener('submit', cadastrarCrianca);
+  }
+
+  // Exemplo para cadastro de usuário (adapte conforme API)
+  if (formCadastroUsuario) {
+    formCadastroUsuario.addEventListener('submit', async e => {
+      e.preventDefault();
+      const nome = getEl('inputUsuarioNome').value;
+      const senha = getEl('inputUsuarioSenha').value;
+      const tipo = getEl('inputUsuarioTipo').value;
+      const res = await makeApiRequest('/usuarios/cadastrar', 'POST', { nome, senha, tipo });
+      showMessage('messageUsuarios', res.message || 'Erro ao cadastrar usuário.', res.success ? 'success' : 'error');
+      if (res.success) {
+        formCadastroUsuario.reset();
+        carregarUsuarios();
+      }
+    });
+  }
+
+  if (formRelatorio) {
+    formRelatorio.addEventListener('submit', e => {
+      e.preventDefault();
+      const data = getEl('inputDataRelatorio').value;
+      gerarRelatorio(data);
+    });
+  }
+
+  // Delegação para ações dinâmicas de checkin, checkout e remover
+  document.body.addEventListener('click', e => {
+    if (e.target.matches('.btn-checkin')) {
+      const id = e.target.getAttribute('data-id');
+      if (id) checkinCrianca(id);
+    } else if (e.target.matches('.btn-checkout')) {
+      const id = e.target.getAttribute('data-id');
+      if (id) checkoutCrianca(id);
+    } else if (e.target.matches('[data-remover]')) {
+      const id = e.target.getAttribute('data-id');
+      if (id) removerCrianca(id);
+    } else if (e.target.classList.contains('close-btn')) {
+      const modalId = e.target.getAttribute('data-close');
+      if (modalId) closeModal(modalId);
+    }
   });
 });
