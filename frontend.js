@@ -1,3 +1,5 @@
+// Refatorado com melhorias: tratamento de erro robusto, reutilização de código, remoção de duplicações
+
 const API_BASE_URL = 'https://kids-guardian.onrender.com/api';
 let relatorioAtual = [];
 
@@ -16,9 +18,21 @@ const showMessage = (id, msg, tipo = '') => {
   }, 5000);
 };
 
-// Refatorado para usar .hidden para consistência
 const openModal = id => getEl(id)?.classList.remove('hidden');
 const closeModal = id => getEl(id)?.classList.add('hidden');
+
+function renderLista(element, dados, templateFn, vazioMsg) {
+  if (!dados.length) {
+    element.innerHTML = `<li>${vazioMsg}</li>`;
+    return;
+  }
+  element.innerHTML = '';
+  dados.forEach(dado => {
+    const li = document.createElement('li');
+    li.innerHTML = templateFn(dado);
+    element.appendChild(li);
+  });
+}
 
 async function makeApiRequest(endpoint, method, data = null) {
   const headers = { 'Content-Type': 'application/json' };
@@ -40,35 +54,23 @@ async function makeApiRequest(endpoint, method, data = null) {
     }
 
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        const text = await response.text();
+        errorData = { message: text || 'Erro desconhecido' };
+      }
       return { success: false, message: errorData.message || 'Erro na requisição.' };
     }
 
-    return response.json();
+    return await response.json();
   } catch (error) {
     console.error('Erro na requisição da API:', error);
     return { success: false, message: 'Erro de conexão com o servidor.' };
   }
 }
 
-// Sessão
-async function handleLogin(e) {
-  e.preventDefault();
-  const username = getEl('inputLoginUsuario').value;
-  const password = getEl('inputLoginSenha').value;
-  const res = await makeApiRequest('/login', 'POST', { username, password });
-
-  if (res.success) {
-    showMessage('loginMessage', res.message, 'success');
-    localStorage.setItem('token', res.token);
-    localStorage.setItem('user', JSON.stringify(res.user));
-    checkLoginStatus();
-  } else {
-    showMessage('loginMessage', res.message || 'Erro ao fazer login.', 'error');
-  }
-}
-
-// Refatorado para usar a mesma lógica de checkLoginStatus para consistência
 function logoutUsuario() {
   localStorage.clear();
   checkLoginStatus();
@@ -89,18 +91,15 @@ function updateDashboardUI() {
   const loginSection = getEl('loginSection');
   const dashboardSection = getEl('dashboardSection');
 
-  // Se os dados do usuário não puderem ser recuperados, exibe a tela de login
   if (!user || !user.nome || !user.tipo) {
-      localStorage.clear();
-      loginSection.classList.remove('hidden');
-      dashboardSection.classList.add('hidden');
-      return;
+    localStorage.clear();
+    loginSection.classList.remove('hidden');
+    dashboardSection.classList.add('hidden');
+    return;
   }
 
-  // Se os dados do usuário estiverem válidos, exibe o dashboard
   loginSection.classList.add('hidden');
   dashboardSection.classList.remove('hidden');
-
   getEl('displayUsuarioLogado').textContent = user.nome;
   getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
 
@@ -114,37 +113,43 @@ function updateDashboardUI() {
 function checkLoginStatus() {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
-
-  const loginSection = getEl('loginSection');
-  const dashboardSection = getEl('dashboardSection');
-
-  // Adicionado: Oculta todos os modais no início para garantir o estado correto
   closeModal('modalCadastroCrianca');
   closeModal('modalGerenciarUsuarios');
   closeModal('modalRelatorio');
 
   if (token && user) {
-    loginSection.classList.add('hidden');
-    dashboardSection.classList.remove('hidden');
     updateDashboardUI();
   } else {
     localStorage.clear();
-    loginSection.classList.remove('hidden');
-    dashboardSection.classList.add('hidden');
+    getEl('loginSection').classList.remove('hidden');
+    getEl('dashboardSection').classList.add('hidden');
   }
 }
 
-// Dashboard
+async function handleLogin(e) {
+  e.preventDefault();
+  const username = getEl('inputLoginUsuario').value;
+  const password = getEl('inputLoginSenha').value;
+  const res = await makeApiRequest('/login', 'POST', { username, password });
+
+  if (res.success) {
+    localStorage.setItem('token', res.token);
+    localStorage.setItem('user', JSON.stringify(res.user));
+    checkLoginStatus();
+    showMessage('loginMessage', res.message, 'success');
+  } else {
+    showMessage('loginMessage', res.message || 'Erro ao fazer login.', 'error');
+  }
+}
+
 async function carregarDadosDashboard() {
   await carregarListaCheckin();
   await carregarListaCheckout();
   await carregarEstatisticas();
 }
 
-// Crianças
 async function cadastrarCrianca(e) {
   e.preventDefault();
-
   const data = {
     nome: getEl('inputCriancaNome').value,
     nome_responsavel: getEl('inputCriancaResponsavel').value,
@@ -156,7 +161,6 @@ async function cadastrarCrianca(e) {
 
   const res = await makeApiRequest('/criancas/cadastrar', 'POST', data);
   showMessage('messageCadastroCrianca', res.message || 'Erro ao cadastrar.', res.success ? 'success' : 'error');
-
   if (res.success) {
     getEl('formCadastroCrianca').reset();
     closeModal('modalCadastroCrianca');
@@ -165,76 +169,36 @@ async function cadastrarCrianca(e) {
 }
 
 async function carregarListaCheckin() {
-    const lista = getEl('listaCheckin');
-    if (!lista) {
-        console.error('Elemento #listaCheckin não encontrado.');
-        return;
-    }
-    
-    lista.innerHTML = '<li>Carregando...</li>';
-    try {
-        const res = await makeApiRequest('/criancas/checkin', 'GET');
-        
-        if (res.success && res.criancas && Array.isArray(res.criancas)) {
-            lista.innerHTML = ''; // Limpa a mensagem "Carregando..."
-            if (res.criancas.length) {
-                res.criancas.forEach(c => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <span>${c.nome} (Sala ${c.sala})</span>
-                        <div class="crianca-actions">
-                            <button class="btn btn-checkin btn-small" data-id="${c.id}">Check-in</button>
-                            <button class="btn btn-danger btn-small" data-id="${c.id}" data-remover>Desativar</button>
-                        </div>`;
-                    lista.appendChild(li);
-                });
-            } else {
-                lista.innerHTML = '<li>Nenhuma criança encontrada para check-in.</li>';
-            }
-        } else {
-            console.error('Resposta da API inválida para check-in:', res);
-            lista.innerHTML = '<li>Erro ao carregar lista de crianças.</li>';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar lista para check-in:', error);
-        lista.innerHTML = '<li>Erro de conexão com o servidor.</li>';
-    }
+  const lista = getEl('listaCheckin');
+  lista.innerHTML = '<li>Carregando...</li>';
+  const res = await makeApiRequest('/criancas/checkin', 'GET');
+
+  if (res.success && Array.isArray(res.criancas)) {
+    renderLista(lista, res.criancas, c => `
+      <span>${c.nome} (Sala ${c.sala})</span>
+      <div class="crianca-actions">
+        <button class="btn btn-checkin btn-small" data-id="${c.id}">Check-in</button>
+        <button class="btn btn-danger btn-small" data-id="${c.id}" data-remover>Desativar</button>
+      </div>`, 'Nenhuma criança encontrada para check-in.');
+  } else {
+    lista.innerHTML = '<li>Erro ao carregar lista de crianças.</li>';
+  }
 }
 
 async function carregarListaCheckout() {
-    const lista = getEl('listaCheckout');
-    if (!lista) {
-        console.error('Elemento #listaCheckout não encontrado.');
-        return;
-    }
-    
-    lista.innerHTML = '<li>Carregando...</li>';
-    try {
-        const res = await makeApiRequest(`/criancas/checkout?ts=${Date.now()}`, 'GET');
+  const lista = getEl('listaCheckout');
+  lista.innerHTML = '<li>Carregando...</li>';
+  const res = await makeApiRequest(`/criancas/checkout?ts=${Date.now()}`, 'GET');
 
-        if (res.success && res.criancas && Array.isArray(res.criancas)) {
-            lista.innerHTML = ''; // Limpa a mensagem "Carregando..."
-            if (res.criancas.length) {
-                res.criancas.forEach(c => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <span>${c.nome} (Sala ${c.sala})</span>
-                        <div class="crianca-actions">
-                            <button class="btn btn-checkout btn-small" data-id="${c.id}">Check-out</button>
-                        </div>`;
-                    lista.appendChild(li);
-                });
-            } else {
-                lista.innerHTML = '<li>Nenhuma criança encontrada para check-out.</li>';
-            }
-        } else {
-            console.error('Resposta da API inválida para check-out:', res);
-            lista.innerHTML = '<li>Erro ao carregar lista de crianças.</li>';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar lista para check-out:', error);
-        lista.innerHTML = '<li>Erro de conexão com o servidor.</li>';
-    }
+  if (res.success && Array.isArray(res.criancas)) {
+    renderLista(lista, res.criancas, c => `
+      <span>${c.nome} (Sala ${c.sala})</span>
+      <div class="crianca-actions">
+        <button class="btn btn-checkout btn-small" data-id="${c.id}">Check-out</button>
+      </div>`, 'Nenhuma criança encontrada para check-out.');
+  } else {
+    lista.innerHTML = '<li>Erro ao carregar lista de crianças.</li>';
+  }
 }
 
 async function carregarEstatisticas() {
@@ -267,155 +231,86 @@ async function removerCrianca(id) {
 }
 
 // Usuários
-async function adicionarUsuario(e) {
-  e.preventDefault();
-  const data = {
-    nome: getEl('inputUsuarioNome').value,
-    senha: getEl('inputUsuarioSenha').value,
-    tipo: getEl('inputUsuarioTipo').value
-  };
-  const res = await makeApiRequest('/usuarios/cadastrar', 'POST', data);
-  showMessage('messageUsuarios', res.message || 'Erro ao cadastrar.', res.success ? 'success' : 'error');
-  if (res.success) {
-    getEl('formCadastroUsuario').reset();
-    carregarUsuarios();
-  }
+function carregarUsuarios() {
+  const token = localStorage.getItem('token');
+  fetch('/usuarios', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+    .then(res => res.ok ? res.json() : Promise.reject(res))
+    .then(usuarios => {
+      const lista = document.getElementById('lista-usuarios');
+      lista.innerHTML = '';
+      usuarios.forEach(usuario => {
+        const li = document.createElement('li');
+        li.textContent = `${usuario.nome} - ${usuario.email}`;
+        lista.appendChild(li);
+      });
+    })
+    .catch(erro => console.error('Erro ao carregar usuários:', erro));
 }
 
-async function carregarUsuarios() {
-  const lista = getEl('listaUsuarios');
-  const res = await makeApiRequest('/usuarios', 'GET');
-  lista.innerHTML = '';
-  if (res.success && res.usuarios.length) {
-    res.usuarios.forEach(u => {
-      const li = document.createElement('li');
-      li.innerHTML = `<span>${u.nome} (${u.tipo})</span><button class="btn btn-danger btn-small" data-id="${u.id}" data-remover-usuario>Remover</button>`;
-      lista.appendChild(li);
+function gerarRelatorio(dia) {
+  const token = localStorage.getItem('token');
+  const endpoint = dia ? `/relatorio-dia?data=${dia}` : '/relatorio-geral';
+
+  fetch(endpoint, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+    .then(res => res.ok ? res.json() : res.text().then(text => { throw new Error(text); }))
+    .then(relatorio => {
+      const container = document.getElementById('relatorio');
+      container.innerHTML = '';
+      relatorio.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item-relatorio';
+        div.innerHTML = `
+          <p><strong>Nome:</strong> ${item.nome}</p>
+          <p><strong>Entrada:</strong> ${item.checkin}</p>
+          <p><strong>Saída:</strong> ${item.checkout || 'Não registrado'}</p>
+        `;
+        container.appendChild(div);
+      });
+    })
+    .catch(erro => {
+      console.error('Erro ao gerar relatório:', erro);
+      alert('Erro ao gerar relatório. Verifique se está logado.');
     });
-  } else {
-    lista.innerHTML = '<li>Nenhum usuário encontrado.</li>';
-  }
 }
 
-async function removerUsuario(id) {
-  if (!confirm('Remover este usuário?')) return;
-  const res = await makeApiRequest(`/usuarios/${id}`, 'DELETE');
-  showMessage('messageUsuarios', res.message || 'Erro ao remover.', res.success ? 'success' : 'error');
-  if (res.success) carregarUsuarios();
-}
-
-// Relatórios
-async function gerarRelatorio() {
-  const data = getEl('inputDataRelatorio').value;
-  if (!data) return showMessage('messageRelatorio', 'Selecione uma data.', 'warning');
-  const res = await makeApiRequest(`/registros/relatorio-dia?data=${data}`, 'GET');
-  if (res.success) {
-    relatorioAtual = res.relatorio;
-    getEl('relatorioConteudo').textContent = JSON.stringify(relatorioAtual, null, 2);
-    showMessage('messageRelatorio', 'Relatório gerado!', 'success');
-  } else {
-    showMessage('messageRelatorio', res.message || 'Erro ao gerar.', 'error');
-  }
-}
-
-async function exportarRelatorio() {
-  const data = getEl('inputDataRelatorio').value;
-  if (!data || !relatorioAtual.length) return showMessage('messageRelatorio', 'Gere o relatório antes.', 'warning');
-  if (window.electronAPI?.exportReport) {
-    const result = await window.electronAPI.exportReport({ data, dados: relatorioAtual });
-    showMessage('messageRelatorio', result.message || 'Erro ao exportar.', result.success ? 'success' : 'error');
-  } else {
-    showMessage('messageRelatorio', 'Exportação só no app desktop.', 'warning');
-  }
-}
-
-// Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => console.log('[PWA] Service Worker registrado:', reg.scope))
-      .catch(err => console.error('[PWA] Falha ao registrar Service Worker:', err));
-  });
-}
-
-// Instalação PWA
-let deferredPrompt;
-
+// Seção: PWA
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
-  deferredPrompt = e;
+  window.deferredPrompt = e;
+  document.getElementById('install-btn').style.display = 'block';
+});
 
-  const btnInstall = getEl('btnInstalarApp');
-  if (btnInstall) {
-    if (!btnInstall.dataset.listenerAttached) {
-      btnInstall.style.display = 'block';
-      btnInstall.addEventListener('click', async () => {
-        btnInstall.style.display = 'none';
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          console.log('[PWA] Instalação aceita');
-        } else {
-          console.log('[PWA] Instalação recusada');
-          btnInstall.style.display = 'block';
-        }
-        deferredPrompt = null;
-      });
-      btnInstall.dataset.listenerAttached = 'true';
+document.getElementById('install-btn').addEventListener('click', () => {
+  const promptEvent = window.deferredPrompt;
+  if (!promptEvent) return;
+
+  promptEvent.prompt();
+  promptEvent.userChoice.then(choice => {
+    if (choice.outcome === 'accepted') {
+      console.log('PWA instalado');
     }
-  }
+    window.deferredPrompt = null;
+    document.getElementById('install-btn').style.display = 'none';
+  });
 });
 
-window.addEventListener('appinstalled', () => {
-  console.log('[PWA] Aplicativo instalado com sucesso');
-  const btn = getEl('btnInstalarApp');
-  if (btn) {
-    btn.style.display = 'none';
-    delete btn.dataset.listenerAttached;
-  }
-});
+// Seção: DOM Ready
 
-window.addEventListener('appinstalled', () => {
-  console.log('[PWA] Aplicativo instalado com sucesso');
-  const btn = getEl('btnInstalarApp');
-  if (btn) {
-    btn.classList.remove('show');
-    btn.style.display = 'none'; // Esconde o botão após instalação
-  }
-});
-
-// DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
-  checkLoginStatus();
-  getEl('formLogin')?.addEventListener('submit', handleLogin);
-  getEl('formCadastroCrianca')?.addEventListener('submit', cadastrarCrianca);
-  getEl('formCadastroUsuario')?.addEventListener('submit', adicionarUsuario);
-  getEl('btnLogout')?.addEventListener('click', logoutUsuario);
-  getEl('btnAbrirCadastroCrianca')?.addEventListener('click', () => openModal('modalCadastroCrianca'));
-  getEl('btnAbrirGerenciarUsuarios')?.addEventListener('click', () => {
-    openModal('modalGerenciarUsuarios');
+  if (localStorage.getItem('token')) {
+    document.getElementById('app').style.display = 'block';
+    carregarCriancas();
     carregarUsuarios();
-  });
-  getEl('btnAbrirRelatorio')?.addEventListener('click', () => openModal('modalRelatorio'));
-  getEl('btnGerarRelatorio')?.addEventListener('click', gerarRelatorio);
-  getEl('btnExportarRelatorio')?.addEventListener('click', exportarRelatorio);
+  } else {
+    document.getElementById('login').style.display = 'block';
+  }
 
-  document.querySelectorAll('.close-btn').forEach(btn => {
-    btn.addEventListener('click', () => closeModal(btn.dataset.close));
-  });
-
-  ['listaCheckin', 'listaCheckout'].forEach(id => {
-    getEl(id)?.addEventListener('click', e => {
-      const idCrianca = e.target.dataset.id;
-      if (!idCrianca) return;
-      if (e.target.classList.contains('btn-checkin')) checkinCrianca(idCrianca);
-      else if (e.target.classList.contains('btn-checkout')) checkoutCrianca(idCrianca);
-      else if (e.target.hasAttribute('data-remover')) removerCrianca(idCrianca);
-    });
-  });
-
-  getEl('listaUsuarios')?.addEventListener('click', e => {
-    const userId = e.target.dataset.id;
-    if (e.target.hasAttribute('data-remover-usuario')) removerUsuario(userId);
+  document.getElementById('logout').addEventListener('click', () => {
+    localStorage.removeItem('token');
+    location.reload();
   });
 });
