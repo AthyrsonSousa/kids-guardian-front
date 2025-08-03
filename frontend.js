@@ -86,9 +86,17 @@ function updateDashboardUI() {
 }
 
 function checkLoginStatus() {
-  localStorage.getItem('token') && localStorage.getItem('user')
-    ? updateDashboardUI()
-    : updateDashboardUI();
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
+
+  // Se não tiver token ou usuário, limpa e mostra login
+  if (!token || !user) {
+    localStorage.clear();
+    updateDashboardUI(); // mostra login
+    return;
+  }
+
+  updateDashboardUI(); // continua com dashboard
 }
 
 // Dashboard
