@@ -96,12 +96,25 @@ function checkLoginStatus() {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
 
+  // Pega os elementos uma única vez
+  const loginSection = document.getElementById('loginSection');
+  const dashboardSection = document.getElementById('dashboardSection');
+
   if (token && user) {
-    updateDashboardUI(); // Exibe dashboard se logado
+    // Se logado, exibe o dashboard e oculta o login
+    loginSection.classList.add('hidden');
+    dashboardSection.classList.remove('hidden');
+    updateDashboardUI(); 
   } else {
-    localStorage.clear();
-    document.getElementById('loginSection').style.display = 'flex';
-    document.getElementById('dashboardSection').classList.remove('active');
+    // Se não estiver logado, oculta o dashboard e exibe o login
+    localStorage.clear(); // Limpa qualquer dado residual por segurança
+    loginSection.classList.remove('hidden');
+    dashboardSection.classList.add('hidden');
+
+    // Adicione estas linhas para garantir que os modais estejam ocultos
+    document.getElementById('modalCadastroCrianca').classList.remove('active');
+    document.getElementById('modalGerenciarUsuarios').classList.remove('active');
+    document.getElementById('modalRelatorio').classList.remove('active');
   }
 }
 
