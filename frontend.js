@@ -261,7 +261,9 @@ async function carregarUsuarios() {
 
 async function gerarRelatorio(dia) {
   const token = localStorage.getItem('token');
-  const endpoint = dia ? `/relatorio-dia?data=${dia}` : '/relatorio-geral';
+  // Ajustado para refletir endpoint correto e fallback para data atual
+  const dataConsulta = dia || new Date().toISOString().slice(0, 10);
+  const endpoint = `/registros/relatorio-dia?data=${dataConsulta}`;
 
   try {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -273,7 +275,8 @@ async function gerarRelatorio(dia) {
       throw new Error(texto);
     }
 
-    const relatorio = await res.json();
+    const data = await res.json();
+    const relatorio = data.relatorio || [];
     const container = getEl('relatorioConteudo');
     if (!container) return;
 
@@ -282,10 +285,11 @@ async function gerarRelatorio(dia) {
       return;
     }
 
+    // Exibindo o relatório de forma formatada (JSON)
     container.textContent = JSON.stringify(relatorio, null, 2);
   } catch (erro) {
     console.error('Erro ao gerar relatório:', erro);
-    alert('Erro ao gerar relatório. Verifique se está logado.');
+    alert('Erro ao gerar relatório. Verifique se está logado e a rota está correta.');
   }
 }
 
