@@ -165,54 +165,76 @@ async function cadastrarCrianca(e) {
 }
 
 async function carregarListaCheckin() {
-  const lista = getEl('listaCheckin');
-  if (!lista) return;
-  lista.innerHTML = '<li>Carregando...</li>';
-  try {
-    const res = await makeApiRequest('/criancas/checkin', 'GET');
-    lista.innerHTML = '';
-    if (res.success && res.criancas.length) {
-      res.criancas.forEach(c => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span>${c.nome} (Sala ${c.sala})</span>
-          <div class="crianca-actions">
-            <button class="btn btn-checkin btn-small" data-id="${c.id}">Check-in</button>
-            <button class="btn btn-danger btn-small" data-id="${c.id}" data-remover>Desativar</button>
-          </div>`;
-        lista.appendChild(li);
-      });
-    } else {
-      lista.innerHTML = '<li>Nenhuma criança encontrada para check-in.</li>';
+    const lista = getEl('listaCheckin');
+    if (!lista) {
+        console.error('Elemento #listaCheckin não encontrado.');
+        return;
     }
-  } catch {
-    lista.innerHTML = '<li>Erro ao carregar lista para check-in.</li>';
-  }
+    
+    lista.innerHTML = '<li>Carregando...</li>';
+    try {
+        const res = await makeApiRequest('/criancas/checkin', 'GET');
+        
+        if (res.success && res.criancas && Array.isArray(res.criancas)) {
+            lista.innerHTML = ''; // Limpa a mensagem "Carregando..."
+            if (res.criancas.length) {
+                res.criancas.forEach(c => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${c.nome} (Sala ${c.sala})</span>
+                        <div class="crianca-actions">
+                            <button class="btn btn-checkin btn-small" data-id="${c.id}">Check-in</button>
+                            <button class="btn btn-danger btn-small" data-id="${c.id}" data-remover>Desativar</button>
+                        </div>`;
+                    lista.appendChild(li);
+                });
+            } else {
+                lista.innerHTML = '<li>Nenhuma criança encontrada para check-in.</li>';
+            }
+        } else {
+            console.error('Resposta da API inválida para check-in:', res);
+            lista.innerHTML = '<li>Erro ao carregar lista de crianças.</li>';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar lista para check-in:', error);
+        lista.innerHTML = '<li>Erro de conexão com o servidor.</li>';
+    }
 }
 
 async function carregarListaCheckout() {
-  const lista = getEl('listaCheckout');
-  if (!lista) return;
-  lista.innerHTML = '<li>Carregando...</li>';
-  try {
-    const res = await makeApiRequest(`/criancas/checkout?ts=${Date.now()}`, 'GET');
-    lista.innerHTML = '';
-    if (res.success && res.criancas.length) {
-      res.criancas.forEach(c => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span>${c.nome} (Sala ${c.sala})</span>
-          <div class="crianca-actions">
-            <button class="btn btn-checkout btn-small" data-id="${c.id}">Check-out</button>
-          </div>`;
-        lista.appendChild(li);
-      });
-    } else {
-      lista.innerHTML = '<li>Nenhuma criança encontrada para check-out.</li>';
+    const lista = getEl('listaCheckout');
+    if (!lista) {
+        console.error('Elemento #listaCheckout não encontrado.');
+        return;
     }
-  } catch {
-    lista.innerHTML = '<li>Erro ao carregar lista para check-out.</li>';
-  }
+    
+    lista.innerHTML = '<li>Carregando...</li>';
+    try {
+        const res = await makeApiRequest(`/criancas/checkout?ts=${Date.now()}`, 'GET');
+
+        if (res.success && res.criancas && Array.isArray(res.criancas)) {
+            lista.innerHTML = ''; // Limpa a mensagem "Carregando..."
+            if (res.criancas.length) {
+                res.criancas.forEach(c => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${c.nome} (Sala ${c.sala})</span>
+                        <div class="crianca-actions">
+                            <button class="btn btn-checkout btn-small" data-id="${c.id}">Check-out</button>
+                        </div>`;
+                    lista.appendChild(li);
+                });
+            } else {
+                lista.innerHTML = '<li>Nenhuma criança encontrada para check-out.</li>';
+            }
+        } else {
+            console.error('Resposta da API inválida para check-out:', res);
+            lista.innerHTML = '<li>Erro ao carregar lista de crianças.</li>';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar lista para check-out:', error);
+        lista.innerHTML = '<li>Erro de conexão com o servidor.</li>';
+    }
 }
 
 async function carregarEstatisticas() {
