@@ -64,11 +64,18 @@ function logoutUsuario() {
 }
 
 function updateDashboardUI() {
-  const user = JSON.parse(localStorage.getItem('user'));
+const userStr = localStorage.getItem('user');
+let user = null;
+
+try {
+  user = JSON.parse(userStr);
+} catch (e) {
+  user = null;
+}
   const loginSection = getEl('loginSection');
   const dashboardSection = getEl('dashboardSection');
 
-  if (user) {
+  if (user && user.nome && user.tipo) {
     loginSection.classList.add('hidden');
     dashboardSection.classList.remove('hidden');
     getEl('displayUsuarioLogado').textContent = user.nome;
@@ -80,8 +87,8 @@ function updateDashboardUI() {
 
     carregarDadosDashboard();
   } else {
-    loginSection.classList.remove('hidden');
-    dashboardSection.classList.add('hidden');
+      document.getElementById('loginSection').style.display = 'flex';
+      document.getElementById('dashboardSection').classList.remove('active');
   }
 }
 
@@ -89,14 +96,13 @@ function checkLoginStatus() {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
 
-  // Se não tiver token ou usuário, limpa e mostra login
-  if (!token || !user) {
+  if (token && user) {
+    updateDashboardUI(); // Exibe dashboard se logado
+  } else {
     localStorage.clear();
-    updateDashboardUI(); // mostra login
-    return;
+    document.getElementById('loginSection').style.display = 'flex';
+    document.getElementById('dashboardSection').classList.remove('active');
   }
-
-  updateDashboardUI(); // continua com dashboard
 }
 
 // Dashboard
