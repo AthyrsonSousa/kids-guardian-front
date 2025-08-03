@@ -9,16 +9,25 @@ const ASSETS_TO_CACHE = [
   '/icons/icon-512.png'
 ];
 
-// Instala e salva os arquivos no cache
+const MAX_DYNAMIC_CACHE_ITEMS = 50; // Limite para cache dinâmico
+
+// Limpa cache dinâmico para limitar tamanho
+async function limitCacheSize(cacheName, maxItems) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > maxItems) {
+    await cache.delete(keys[0]);
+    await limitCacheSize(cacheName, maxItems); // recursivo até ficar no limite
+  }
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
   );
   self.skipWaiting();
 });
 
-// Remove caches antigos na ativação
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -31,43 +40,45 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Refatorado para corrigir o erro
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // A nova verificação:
-  // Intercepta apenas requisições GET que são do mesmo domínio da aplicação
-  // e que não são para a API.
   if (
-    request.method !== 'GET' || 
-    url.origin !== location.origin || 
+    request.method !== 'GET' ||
+    url.origin !== location.origin ||
     url.pathname.includes('/api/')
   ) {
-    return;
+    return; // Ignora outros requests
   }
 
-  event.respondWith(
-    caches.match(request).then(cachedResponse => {
-      if (cachedResponse) {
-        return cachedResponse;
+  event.respondWith((async () => {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    try {
+      const networkResponse = await fetch(request);
+      if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+        return networkResponse;
       }
 
-      return fetch(request).then(response => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
+      const responseClone = networkResponse.clone();
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, responseClone);
+      await limitCacheSize(CACHE_NAME, MAX_DYNAMIC_CACHE_ITEMS);
 
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(request, responseClone);
-        });
-        return response;
-      })
-      .catch(error => {
-        console.error('Erro de fetch: ', error);
-        return caches.match('/index.html');
-      });
-    })
-  );
+      return networkResponse;
+    } catch (error) {
+      console.error('Fetch failed:', error);
+
+      // Fallbacks para imagens ou outros arquivos estáticos
+      if (request.destination === 'image') {
+        return caches.match('/icons/icon-192.png'); // imagem fallback
+      }
+
+      return caches.match('/index.html');
+    }
+  })());
 });
