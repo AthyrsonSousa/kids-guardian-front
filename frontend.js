@@ -16,27 +16,39 @@ const showMessage = (id, msg, tipo = '') => {
   }, 5000);
 };
 
-const openModal = id => getEl(id)?.classList.add('active');
-const closeModal = id => getEl(id)?.classList.remove('active');
+// Refatorado para usar .hidden para consistência
+const openModal = id => getEl(id)?.classList.remove('hidden');
+const closeModal = id => getEl(id)?.classList.add('hidden');
 
 async function makeApiRequest(endpoint, method, data = null) {
   const headers = { 'Content-Type': 'application/json' };
   const token = localStorage.getItem('token');
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method,
-    headers,
-    body: data ? JSON.stringify(data) : null,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method,
+      headers,
+      body: data ? JSON.stringify(data) : null,
+    });
 
-  if (response.status === 401 || response.status === 403) {
-    localStorage.clear();
-    checkLoginStatus();
-    showMessage('loginMessage', 'Sessão expirada. Faça login novamente.', 'error');
+    if (response.status === 401 || response.status === 403) {
+      localStorage.clear();
+      checkLoginStatus();
+      showMessage('loginMessage', 'Sessão expirada. Faça login novamente.', 'error');
+      return { success: false, message: 'Sessão expirada.' };
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, message: errorData.message || 'Erro na requisição.' };
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Erro na requisição da API:', error);
+    return { success: false, message: 'Erro de conexão com o servidor.' };
   }
-
-  return response.json();
 }
 
 // Sessão
@@ -50,34 +62,30 @@ async function handleLogin(e) {
     showMessage('loginMessage', res.message, 'success');
     localStorage.setItem('token', res.token);
     localStorage.setItem('user', JSON.stringify(res.user));
-    updateDashboardUI();
+    checkLoginStatus();
   } else {
     showMessage('loginMessage', res.message || 'Erro ao fazer login.', 'error');
   }
 }
 
+// Refatorado para usar a mesma lógica de checkLoginStatus para consistência
 function logoutUsuario() {
   localStorage.clear();
-  getEl('dashboardSection').classList.remove('active');
-  getEl('loginSection').style.display = 'flex';
+  checkLoginStatus();
   showMessage('loginMessage', 'Sessão encerrada.', 'success');
 }
 
 function updateDashboardUI() {
-const userStr = localStorage.getItem('user');
-let user = null;
+  const userStr = localStorage.getItem('user');
+  let user = null;
 
-try {
-  user = JSON.parse(userStr);
-} catch (e) {
-  user = null;
-}
-  const loginSection = getEl('loginSection');
-  const dashboardSection = getEl('dashboardSection');
-
+  try {
+    user = JSON.parse(userStr);
+  } catch (e) {
+    user = null;
+  }
+  
   if (user && user.nome && user.tipo) {
-    loginSection.classList.add('hidden');
-    dashboardSection.classList.remove('hidden');
     getEl('displayUsuarioLogado').textContent = user.nome;
     getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
 
@@ -86,9 +94,6 @@ try {
     });
 
     carregarDadosDashboard();
-  } else {
-      document.getElementById('loginSection').style.display = 'flex';
-      document.getElementById('dashboardSection').classList.remove('active');
   }
 }
 
@@ -96,25 +101,22 @@ function checkLoginStatus() {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
 
-  // Pega os elementos uma única vez
-  const loginSection = document.getElementById('loginSection');
-  const dashboardSection = document.getElementById('dashboardSection');
+  const loginSection = getEl('loginSection');
+  const dashboardSection = getEl('dashboardSection');
+
+  // Adicionado: Oculta todos os modais no início para garantir o estado correto
+  closeModal('modalCadastroCrianca');
+  closeModal('modalGerenciarUsuarios');
+  closeModal('modalRelatorio');
 
   if (token && user) {
-    // Se logado, exibe o dashboard e oculta o login
     loginSection.classList.add('hidden');
     dashboardSection.classList.remove('hidden');
-    updateDashboardUI(); 
+    updateDashboardUI();
   } else {
-    // Se não estiver logado, oculta o dashboard e exibe o login
-    localStorage.clear(); // Limpa qualquer dado residual por segurança
+    localStorage.clear();
     loginSection.classList.remove('hidden');
     dashboardSection.classList.add('hidden');
-
-    // Adicione estas linhas para garantir que os modais estejam ocultos
-    document.getElementById('modalCadastroCrianca').classList.remove('active');
-    document.getElementById('modalGerenciarUsuarios').classList.remove('active');
-    document.getElementById('modalRelatorio').classList.remove('active');
   }
 }
 
@@ -128,6 +130,7 @@ async function carregarDadosDashboard() {
 // Crianças
 async function cadastrarCrianca(e) {
   e.preventDefault();
+
   const data = {
     nome: getEl('inputCriancaNome').value,
     nome_responsavel: getEl('inputCriancaResponsavel').value,
@@ -308,7 +311,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
   const btnInstall = getEl('btnInstalarApp');
   if (btnInstall) {
-    // Evita múltiplos event listeners
     if (!btnInstall.dataset.listenerAttached) {
       btnInstall.style.display = 'block';
       btnInstall.addEventListener('click', async () => {
