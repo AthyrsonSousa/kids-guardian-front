@@ -69,8 +69,8 @@ function updateDashboardUI() {
   const dashboardSection = getEl('dashboardSection');
 
   if (user) {
-    loginSection.style.display = 'none';
-    dashboardSection.classList.add('active');
+    loginSection.classList.add('hidden');
+    dashboardSection.classList.remove('hidden');
     getEl('displayUsuarioLogado').textContent = user.nome;
     getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
 
@@ -80,8 +80,8 @@ function updateDashboardUI() {
 
     carregarDadosDashboard();
   } else {
-    loginSection.style.display = 'flex';
-    dashboardSection.classList.remove('active');
+    loginSection.classList.remove('hidden');
+    dashboardSection.classList.add('hidden');
   }
 }
 
