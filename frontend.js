@@ -76,52 +76,64 @@ function logoutUsuario() {
 }
 
 function updateDashboardUI() {
-  const userStr = localStorage.getItem('user');
-  let user = null;
+    const userStr = localStorage.getItem('user');
+    let user = null;
 
-  try {
-    user = JSON.parse(userStr);
-  } catch (e) {
-    console.error("Erro ao processar dados do usuário do localStorage.", e);
-    user = null;
-  }
+    try {
+        user = JSON.parse(userStr);
+    } catch (e) {
+        console.error("Erro ao processar dados do usuário do localStorage.", e);
+        user = null;
+    }
 
-  const loginSection = getEl('loginSection');
-  const dashboardSection = getEl('dashboardSection');
+    const loginSection = getEl('loginSection');
+    const dashboardSection = getEl('dashboardSection');
 
-  if (!user || !user.nome || !user.tipo) {
-    localStorage.clear();
-    loginSection.classList.remove('hidden');
-    dashboardSection.classList.add('hidden');
-    return;
-  }
+    // Garante que o estado inicial está limpo
+    loginSection.classList.add('hidden');
+    dashboardSection.classList.remove('hidden');
 
-  loginSection.classList.add('hidden');
-  dashboardSection.classList.remove('hidden');
-  getEl('displayUsuarioLogado').textContent = user.nome;
-  getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
+    if (!user || !user.nome || !user.tipo) {
+        // Se não há usuário logado, reverte o estado
+        loginSection.classList.remove('hidden');
+        dashboardSection.classList.add('hidden');
+        return;
+    }
 
-  document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.display = user.tipo === 'administrador' ? 'block' : 'none';
-  });
+    getEl('displayUsuarioLogado').textContent = user.nome;
+    getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
 
-  carregarDadosDashboard();
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = user.tipo === 'administrador' ? 'block' : 'none';
+    });
+
+    carregarDadosDashboard();
 }
 
-function checkLoginStatus() {
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  closeModal('modalCadastroCrianca');
-  closeModal('modalGerenciarUsuarios');
-  closeModal('modalRelatorio');
 
-  if (token && user) {
-    updateDashboardUI();
-  } else {
-    localStorage.clear();
-    getEl('loginSection').classList.remove('hidden');
-    getEl('dashboardSection').classList.add('hidden');
-  }
+function checkLoginStatus() {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+
+    // Fecha todos os modais ao verificar o status de login
+    closeModal('modalCadastroCrianca');
+    closeModal('modalGerenciarUsuarios');
+    closeModal('modalRelatorio');
+
+    const loginSection = getEl('loginSection');
+    const dashboardSection = getEl('dashboardSection');
+
+    if (token && user) {
+        // Se logado, mostra o dashboard e esconde o login
+        loginSection.classList.add('hidden');
+        dashboardSection.classList.remove('hidden');
+        updateDashboardUI();
+    } else {
+        // Se não logado, mostra o login e esconde o dashboard
+        localStorage.clear();
+        loginSection.classList.remove('hidden');
+        dashboardSection.classList.add('hidden');
+    }
 }
 
 async function handleLogin(e) {
