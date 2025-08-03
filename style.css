@@ -48,10 +48,6 @@ body {
 }
 
 /* Ocultar elementos: remover !important e usar seletor mais específico */
-.hidden {
-  display: none;
-}
-
 #dashboardSection.hidden {
   display: none;
 }
@@ -317,4 +313,7 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+.hidden {
+  display: none !important;
 }
