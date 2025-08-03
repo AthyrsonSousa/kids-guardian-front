@@ -27,31 +27,31 @@
     </header>
 
     <main class="main-content">
-     <!-- Login -->
-<section id="loginSection" class="login-section active">
-  <form id="formLogin" class="login-form">
-    <h2 style="text-align: center; color: #2e7d32;">Fazer Login</h2>
-    <div id="loginMessage" class="message"></div>
+      <!-- Login -->
+      <section id="loginSection" class="login-section active">
+        <form id="formLogin" class="login-form">
+          <h2 style="text-align: center; color: #2e7d32;">Fazer Login</h2>
+          <div id="loginMessage" class="message"></div>
 
-   <div class="form-group">
-  <label for="inputLoginUsuario">Usuário</label>
-  <div class="input-icon-group">
-    <span class="icon">👤</span>
-    <input type="text" id="inputLoginUsuario" required />
-  </div>
-</div>
+          <div class="form-group">
+            <label for="inputLoginUsuario">Usuário</label>
+            <div class="input-icon-group">
+              <span class="icon">👤</span>
+              <input type="text" id="inputLoginUsuario" required />
+            </div>
+          </div>
 
-<div class="form-group">
-  <label for="inputLoginSenha">Senha</label>
-  <div class="input-icon-group">
-    <span class="icon">🔒</span>
-    <input type="password" id="inputLoginSenha" required />
-  </div>
-</div>
+          <div class="form-group">
+            <label for="inputLoginSenha">Senha</label>
+            <div class="input-icon-group">
+              <span class="icon">🔒</span>
+              <input type="password" id="inputLoginSenha" required />
+            </div>
+          </div>
 
-    <button type="submit" class="btn btn-primary">Entrar</button>
-  </form>
-</section>
+          <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+      </section>
 
       <!-- Dashboard -->
       <section id="dashboardSection" class="dashboard">
@@ -105,62 +105,94 @@
     </main>
   </div>
 
-  <!-- Modais -->
+  <!-- Modal: Cadastro Criança -->
   <div id="modalCadastroCrianca" class="modal">
     <div class="modal-content">
       <span class="close-btn" data-close="modalCadastroCrianca">&times;</span>
       <h2>Cadastrar Criança</h2>
       <div id="messageCadastroCrianca" class="message"></div>
       <form id="formCadastroCrianca">
-        <input type="text" id="inputCriancaNome" placeholder="Nome" required />
-        <input type="text" id="inputCriancaResponsavel" placeholder="Responsável" required />
-        <input type="text" id="inputCriancaNumero" placeholder="Telefone" required />
-        <input type="number" id="inputCriancaIdade" placeholder="Idade" required />
-        <select id="inputCriancaSala" required>
-          <option value="">Sala</option>
-          <option value="1">Sala 1 (0-3)</option>
-          <option value="2">Sala 2 (4-6)</option>
-          <option value="3">Sala 3 (7-9)</option>
-          <option value="4">Sala 4 (10-12)</option>
-        </select>
-        <textarea id="inputCriancaObs" placeholder="Observações"></textarea>
+        <div class="form-group">
+          <label for="inputCriancaNome">Nome</label>
+          <input type="text" id="inputCriancaNome" placeholder="Nome" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaResponsavel">Responsável</label>
+          <input type="text" id="inputCriancaResponsavel" placeholder="Responsável" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaNumero">Telefone</label>
+          <input type="text" id="inputCriancaNumero" placeholder="Telefone" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaIdade">Idade</label>
+          <input type="number" id="inputCriancaIdade" placeholder="Idade" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaSala">Sala</label>
+          <select id="inputCriancaSala" required>
+            <option value="">Selecione a sala</option>
+            <option value="1">Sala 1 (0-3)</option>
+            <option value="2">Sala 2 (4-6)</option>
+            <option value="3">Sala 3 (7-9)</option>
+            <option value="4">Sala 4 (10-12)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaObs">Observações</label>
+          <textarea id="inputCriancaObs" placeholder="Observações"></textarea>
+        </div>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </form>
     </div>
   </div>
 
+  <!-- Modal: Gerenciar Usuários -->
   <div id="modalGerenciarUsuarios" class="modal">
     <div class="modal-content">
       <span class="close-btn" data-close="modalGerenciarUsuarios">&times;</span>
       <h2>Gerenciar Usuários</h2>
       <div id="messageUsuarios" class="message"></div>
       <form id="formCadastroUsuario">
-        <input type="text" id="inputUsuarioNome" placeholder="Nome" required />
-        <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
-        <select id="inputUsuarioTipo" required>
-          <option value="">Tipo</option>
-          <option value="administrador">Administrador</option>
-          <option value="voluntario">Voluntário</option>
-        </select>
+        <div class="form-group">
+          <label for="inputUsuarioNome">Nome</label>
+          <input type="text" id="inputUsuarioNome" placeholder="Nome" required />
+        </div>
+        <div class="form-group">
+          <label for="inputUsuarioSenha">Senha</label>
+          <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
+        </div>
+        <div class="form-group">
+          <label for="inputUsuarioTipo">Tipo</label>
+          <select id="inputUsuarioTipo" required>
+            <option value="">Selecione o tipo</option>
+            <option value="administrador">Administrador</option>
+            <option value="voluntario">Voluntário</option>
+          </select>
+        </div>
         <button type="submit" class="btn btn-primary">Adicionar</button>
       </form>
       <ul id="listaUsuarios" class="user-list"></ul>
     </div>
   </div>
 
+  <!-- Modal: Relatório -->
   <div id="modalRelatorio" class="modal">
     <div class="modal-content">
       <span class="close-btn" data-close="modalRelatorio">&times;</span>
       <h2>Relatório do Dia</h2>
       <div id="messageRelatorio" class="message"></div>
-      <input type="date" id="inputDataRelatorio" required />
+      <div class="form-group">
+        <label for="inputDataRelatorio">Data</label>
+        <input type="date" id="inputDataRelatorio" required />
+      </div>
       <button id="btnGerarRelatorio" class="btn btn-success">Gerar</button>
       <button id="btnExportarRelatorio" class="btn btn-secondary">Exportar</button>
       <pre id="relatorioConteudo" class="report-content"></pre>
     </div>
   </div>
 
-  <!-- JS -->
+  <!-- Scripts -->
   <script src="frontend.js"></script>
 </body>
 </html>
