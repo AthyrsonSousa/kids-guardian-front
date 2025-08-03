@@ -8,6 +8,10 @@ body {
   font-size: 1rem;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .container {
   max-width: 75rem;
   margin: 1.25rem auto;
