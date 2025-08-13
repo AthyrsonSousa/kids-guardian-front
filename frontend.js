@@ -1,7 +1,7 @@
 const API_BASE_URL = 'https://kids-guardian.onrender.com/api';
 let relatorioAtual = [];
 
-// Utilitários DOM
+// ==== UTILITÁRIOS DOM ====
 const getEl = id => document.getElementById(id);
 const showMessage = (id, msg, tipo = '') => {
   const el = getEl(id);
@@ -32,6 +32,7 @@ function renderLista(element, dados, templateFn, vazioMsg) {
   });
 }
 
+// ==== REQUISIÇÕES API ====
 async function makeApiRequest(endpoint, method, data = null) {
   const headers = { 'Content-Type': 'application/json' };
   const token = localStorage.getItem('token');
@@ -44,6 +45,7 @@ async function makeApiRequest(endpoint, method, data = null) {
       body: data ? JSON.stringify(data) : null,
     });
 
+    // Verificação de sessão expirada
     if (response.status === 401 || response.status === 403) {
       localStorage.clear();
       checkLoginStatus();
@@ -69,6 +71,7 @@ async function makeApiRequest(endpoint, method, data = null) {
   }
 }
 
+// ==== AUTENTICAÇÃO ====
 function logoutUsuario() {
   localStorage.clear();
   checkLoginStatus();
@@ -76,64 +79,53 @@ function logoutUsuario() {
 }
 
 function updateDashboardUI() {
-    const userStr = localStorage.getItem('user');
-    let user = null;
+  const userStr = localStorage.getItem('user');
+  let user = null;
 
-    try {
-        user = JSON.parse(userStr);
-    } catch (e) {
-        console.error("Erro ao processar dados do usuário do localStorage.", e);
-        user = null;
-    }
+  try {
+    user = JSON.parse(userStr);
+  } catch (e) {
+    console.error("Erro ao processar dados do usuário do localStorage.", e);
+    user = null;
+  }
 
-    const loginSection = getEl('loginSection');
-    const dashboardSection = getEl('dashboardSection');
+  const loginSection = getEl('loginSection');
+  const dashboardSection = getEl('dashboardSection');
 
-    // Garante que o estado inicial está limpo
-    loginSection.classList.add('hidden');
-    dashboardSection.classList.remove('hidden');
+  if (!user || !user.nome || !user.tipo) {
+    loginSection.classList.remove('hidden');
+    dashboardSection.classList.add('hidden');
+    return;
+  }
 
-    if (!user || !user.nome || !user.tipo) {
-        // Se não há usuário logado, reverte o estado
-        loginSection.classList.remove('hidden');
-        dashboardSection.classList.add('hidden');
-        return;
-    }
+  loginSection.classList.add('hidden');
+  dashboardSection.classList.remove('hidden');
 
-    getEl('displayUsuarioLogado').textContent = user.nome;
-    getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
+  getEl('displayUsuarioLogado').textContent = user.nome;
+  getEl('displayCargoUsuario').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
 
-    document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = user.tipo === 'administrador' ? 'block' : 'none';
-    });
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = user.tipo === 'administrador' ? 'block' : 'none';
+  });
 
-    carregarDadosDashboard();
+  carregarDadosDashboard();
 }
 
-
 function checkLoginStatus() {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
 
-    // Fecha todos os modais ao verificar o status de login
-    closeModal('modalCadastroCrianca');
-    closeModal('modalGerenciarUsuarios');
-    closeModal('modalRelatorio');
+  closeModal('modalCadastroCrianca');
+  closeModal('modalGerenciarUsuarios');
+  closeModal('modalRelatorio');
 
-    const loginSection = getEl('loginSection');
-    const dashboardSection = getEl('dashboardSection');
-
-    if (token && user) {
-        // Se logado, mostra o dashboard e esconde o login
-        loginSection.classList.add('hidden');
-        dashboardSection.classList.remove('hidden');
-        updateDashboardUI();
-    } else {
-        // Se não logado, mostra o login e esconde o dashboard
-        localStorage.clear();
-        loginSection.classList.remove('hidden');
-        dashboardSection.classList.add('hidden');
-    }
+  if (token && user) {
+    updateDashboardUI();
+  } else {
+    localStorage.clear();
+    getEl('loginSection').classList.remove('hidden');
+    getEl('dashboardSection').classList.add('hidden');
+  }
 }
 
 async function handleLogin(e) {
@@ -152,6 +144,7 @@ async function handleLogin(e) {
   }
 }
 
+// ==== DASHBOARD ====
 async function carregarDadosDashboard() {
   await carregarListaCheckin();
   await carregarListaCheckout();
@@ -221,6 +214,7 @@ async function carregarEstatisticas() {
   }
 }
 
+// ==== AÇÕES ====
 async function checkinCrianca(id) {
   const res = await makeApiRequest('/registros/checkin', 'POST', { crianca_id: id });
   showMessage('checkinMessage', res.message || 'Erro no check-in.', res.success ? 'success' : 'error');
@@ -240,40 +234,31 @@ async function removerCrianca(id) {
   if (res.success) carregarDadosDashboard();
 }
 
-// Usuários
+// ==== USUÁRIOS ====
 async function carregarUsuarios() {
-  try {
-    const res = await makeApiRequest('/usuarios', 'GET');
-    const lista = getEl('listaUsuarios');
-    if (!lista) return;
+  const res = await makeApiRequest('/usuarios', 'GET');
+  const lista = getEl('listaUsuarios');
+  if (!lista) return;
 
-    if (!res.success) {
-      lista.innerHTML = '<li>Erro ao carregar usuários.</li>';
-      return;
-    }
-
-    // Verificar diferentes estruturas de resposta
-    let usuarios = res.usuarios || res.data || res;
-    
-    if (!Array.isArray(usuarios)) {
-      console.error('Resposta não é um array:', usuarios);
-      lista.innerHTML = '<li>Formato de resposta inválido.</li>';
-      return;
-    }
-
-    renderLista(lista, usuarios, usuario => `
-      ${usuario.nome} - ${usuario.email || usuario.username || 'N/A'}
-    `, 'Nenhum usuário encontrado.');
-    
-  } catch (erro) {
-    console.error('Erro ao carregar usuários:', erro);
-    showMessage('messageUsuarios', 'Erro ao carregar usuários.', 'error');
+  if (!res.success) {
+    lista.innerHTML = '<li>Erro ao carregar usuários.</li>';
+    return;
   }
+
+  const usuarios = res.usuarios || res.data || [];
+  if (!Array.isArray(usuarios)) {
+    lista.innerHTML = '<li>Formato de resposta inválido.</li>';
+    return;
+  }
+
+  renderLista(lista, usuarios, usuario => `
+    ${usuario.nome} - ${usuario.email || usuario.username || 'N/A'}
+  `, 'Nenhum usuário encontrado.');
 }
 
+// ==== RELATÓRIO ====
 async function gerarRelatorio(dia) {
   const token = localStorage.getItem('token');
-  // Ajustado para refletir endpoint correto e fallback para data atual
   const dataConsulta = dia || new Date().toISOString().slice(0, 10);
   const endpoint = `/registros/relatorio-dia?data=${dataConsulta}`;
 
@@ -282,30 +267,23 @@ async function gerarRelatorio(dia) {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
-    if (!res.ok) {
-      const texto = await res.text();
-      throw new Error(texto);
-    }
+    if (!res.ok) throw new Error(await res.text());
 
     const data = await res.json();
     const relatorio = data.relatorio || [];
     const container = getEl('relatorioConteudo');
+
     if (!container) return;
-
-    if (relatorio.length === 0) {
-      container.textContent = 'Nenhum dado encontrado para o relatório.';
-      return;
-    }
-
-    // Exibindo o relatório de forma formatada (JSON)
-    container.textContent = JSON.stringify(relatorio, null, 2);
+    container.textContent = relatorio.length
+      ? JSON.stringify(relatorio, null, 2)
+      : 'Nenhum dado encontrado para o relatório.';
   } catch (erro) {
     console.error('Erro ao gerar relatório:', erro);
     alert('Erro ao gerar relatório. Verifique se está logado e a rota está correta.');
   }
 }
 
-// Seção: PWA
+// ==== PWA ====
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   window.deferredPrompt = e;
@@ -313,10 +291,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
   if (installBtn) installBtn.style.display = 'block';
 });
 
+// ==== INICIALIZAÇÃO ====
 document.addEventListener('DOMContentLoaded', () => {
-  const loginSection = getEl('loginSection');
-  const dashboardSection = getEl('dashboardSection');
-
   const btnLogout = getEl('btnLogout');
   const installBtn = getEl('btnInstalarApp');
   const formLogin = getEl('formLogin');
@@ -328,64 +304,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAbrirRelatorio = getEl('btnAbrirRelatorio');
   const btnAbrirGerenciarUsuarios = getEl('btnAbrirGerenciarUsuarios');
 
-  // Verifica se usuário está logado
-  if (localStorage.getItem('token')) {
-    loginSection.classList.add('hidden');
-    dashboardSection.classList.remove('hidden');
-    carregarDadosDashboard();
-    carregarUsuarios();
-  } else {
-    loginSection.classList.remove('hidden');
-    dashboardSection.classList.add('hidden');
-  }
+  // Verifica status de login na inicialização
+  checkLoginStatus();
 
-  // Botões que abrem modais
-  if (btnAbrirCadastroCrianca) {
-    btnAbrirCadastroCrianca.addEventListener('click', () => openModal('modalCadastroCrianca'));
-  }
-  if (btnAbrirRelatorio) {
-    btnAbrirRelatorio.addEventListener('click', () => openModal('modalRelatorio'));
-  }
-  if (btnAbrirGerenciarUsuarios) {
-    btnAbrirGerenciarUsuarios.addEventListener('click', () => openModal('modalGerenciarUsuarios'));
-  }
+  if (btnAbrirCadastroCrianca) btnAbrirCadastroCrianca.addEventListener('click', () => openModal('modalCadastroCrianca'));
+  if (btnAbrirRelatorio) btnAbrirRelatorio.addEventListener('click', () => openModal('modalRelatorio'));
+  if (btnAbrirGerenciarUsuarios) btnAbrirGerenciarUsuarios.addEventListener('click', () => openModal('modalGerenciarUsuarios'));
 
-  // Logout
-  if (btnLogout) {
-    btnLogout.addEventListener('click', () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      location.reload();
-    });
-  }
+  if (btnLogout) btnLogout.addEventListener('click', logoutUsuario);
 
-  // Instalar PWA
   if (installBtn) {
     installBtn.addEventListener('click', async () => {
       const promptEvent = window.deferredPrompt;
       if (!promptEvent) return;
-
       promptEvent.prompt();
       const choiceResult = await promptEvent.userChoice;
-      if (choiceResult.outcome === 'accepted') {
-        console.log('PWA instalado');
-      }
+      if (choiceResult.outcome === 'accepted') console.log('PWA instalado');
       window.deferredPrompt = null;
       installBtn.style.display = 'none';
     });
   }
 
-  // Formulário login
-  if (formLogin) {
-    formLogin.addEventListener('submit', handleLogin);
-  }
+  if (formLogin) formLogin.addEventListener('submit', handleLogin);
+  if (formCadastroCrianca) formCadastroCrianca.addEventListener('submit', cadastrarCrianca);
 
-  // Formulário cadastro criança
-  if (formCadastroCrianca) {
-    formCadastroCrianca.addEventListener('submit', cadastrarCrianca);
-  }
-
-  // Formulário cadastro usuário
   if (formCadastroUsuario) {
     formCadastroUsuario.addEventListener('submit', async e => {
       e.preventDefault();
@@ -401,7 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Formulário relatório
   if (formRelatorio) {
     formRelatorio.addEventListener('submit', e => {
       e.preventDefault();
@@ -410,7 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Delegação para botões dinâmicos: checkin, checkout, remover e fechar modais
   document.body.addEventListener('click', e => {
     if (e.target.matches('.btn-checkin')) {
       const id = e.target.getAttribute('data-id');
