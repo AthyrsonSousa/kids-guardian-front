@@ -1,105 +1,129 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="stylesheet" href="/style.css" />
-  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
-  <title>Kids Guardian</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <title>Kids Guardian</title>
+
+  <!-- Garantir que elementos ocultos realmente fiquem invisíveis -->
+  <style>
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-    <main id="loginSection" class="centered login-section">
-   <form id="formLogin" class="login-form">
-  <h2>Login</h2>
-  <input type="text" id="inputLoginUsuario" placeholder="Usuário" required />
-  <input type="password" id="inputLoginSenha" placeholder="Senha" required />
-  <button type="submit" class="btn btn-primary">Entrar</button>
-  <div id="loginMessage" class="message"></div>
-    </form>
-  </main>
+  <!-- LOGIN -->
+  <main id="loginSection" class="centered login-section">
+    <form id="formLogin" class="login-form">
+      <h2>Login</h2>
+      <input type="text" id="inputLoginUsuario" placeholder="Usuário" required />
+      <input type="password" id="inputLoginSenha" placeholder="Senha" required />
+      <button type="submit" class="btn btn-primary">Entrar</button>
+      <div id="loginMessage" class="message"></div>
+    </form>
+  </main>
 
-    <section id="dashboardSection" class="hidden">
-    <header class="header">
-      <h1>Kids Guardian</h1>
-      <div>
-        Usuário: <span id="displayUsuarioLogado"></span> (<span id="displayCargoUsuario"></span>)
-      </div>
-      <button id="btnLogout" class="btn btn-danger">Sair</button>
-    </header>
+  <!-- DASHBOARD (inicialmente oculto) -->
+  <section id="dashboardSection" class="hidden">
+    <header class="header">
+      <h1>Kids Guardian</h1>
+      <div>
+        Usuário: <span id="displayUsuarioLogado"></span> (<span id="displayCargoUsuario"></span>)
+      </div>
+      <button id="btnLogout" class="btn btn-danger">Sair</button>
+    </header>
 
-    <nav>
-      <button id="btnAbrirCadastroCrianca" class="btn btn-primary">Cadastro de Criança</button>
-      <button id="btnAbrirRelatorio" class="btn btn-info">Relatório</button>
-      <button id="btnAbrirGerenciarUsuarios" class="btn btn-secondary admin-only" style="display:none;">Gerenciar Usuários</button>
-    </nav>
+    <nav>
+      <button id="btnAbrirCadastroCrianca" class="btn btn-primary">Cadastro de Criança</button>
+      <button id="btnAbrirRelatorio" class="btn btn-info">Relatório</button>
+      <button id="btnAbrirGerenciarUsuarios" class="btn btn-secondary admin-only" style="display:none;">Gerenciar Usuários</button>
+    </nav>
 
-        <section id="modalCadastroCrianca" class="hidden modal">
-      <h2>Cadastro de Criança</h2>
-      <form id="formCadastroCrianca">
-        <input type="text" id="inputCriancaNome" placeholder="Nome da Criança" required />
-        <input type="text" id="inputCriancaResponsavel" placeholder="Responsável" required />
-        <input type="text" id="inputCriancaNumero" placeholder="Telefone Responsável" required />
-        <input type="number" id="inputCriancaIdade" placeholder="Idade" required />
-        <input type="number" id="inputCriancaSala" placeholder="Sala" required />
-        <textarea id="inputCriancaObs" placeholder="Observações"></textarea>
-        <button type="submit" class="btn btn-success">Cadastrar</button>
-      </form>
-      <button class="close-btn" data-close="modalCadastroCrianca">Fechar</button>
-      <div id="messageCadastroCrianca" class="message"></div>
-    </section>
+    <!-- MODAL: Cadastro Criança -->
+    <section id="modalCadastroCrianca" class="hidden modal">
+      <h2>Cadastro de Criança</h2>
+      <form id="formCadastroCrianca">
+        <input type="text" id="inputCriancaNome" placeholder="Nome da Criança" required />
+        <input type="text" id="inputCriancaResponsavel" placeholder="Responsável" required />
+        <input type="text" id="inputCriancaNumero" placeholder="Telefone Responsável" required />
+        <input type="number" id="inputCriancaIdade" placeholder="Idade" required />
+        <input type="number" id="inputCriancaSala" placeholder="Sala" required />
+        <textarea id="inputCriancaObs" placeholder="Observações"></textarea>
+        <button type="submit" class="btn btn-success">Cadastrar</button>
+      </form>
+      <button class="close-btn" data-close="modalCadastroCrianca">Fechar</button>
+      <div id="messageCadastroCrianca" class="message"></div>
+    </section>
 
-        <section id="modalRelatorio" class="hidden modal">
-      <h2>Relatório de Check-ins</h2>
-      <form id="formRelatorio">
-        <input type="date" id="inputDataRelatorio" />
-        <button type="submit" class="btn btn-info">Gerar Relatório</button>
-      </form>
-      <div id="relatorioConteudo"></div>
-      <button class="close-btn" data-close="modalRelatorio">Fechar</button>
-    </section>
+    <!-- MODAL: Relatório -->
+    <section id="modalRelatorio" class="hidden modal">
+      <h2>Relatório de Check-ins</h2>
+      <form id="formRelatorio">
+        <input type="date" id="inputDataRelatorio" />
+        <button type="submit" class="btn btn-info">Gerar Relatório</button>
+      </form>
+      <div id="relatorioConteudo"></div>
+      <button class="close-btn" data-close="modalRelatorio">Fechar</button>
+    </section>
 
-        <section id="modalGerenciarUsuarios" class="hidden modal">
-      <h2>Gerenciamento de Usuários</h2>
-      <form id="formCadastroUsuario">
-        <input type="text" id="inputUsuarioNome" placeholder="Nome do Usuário" required />
-        <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
-        <select id="inputUsuarioTipo" required>
-          <option value="administrador">Administrador</option>
-          <option value="usuario">Usuário</option>
-        </select>
-        <button type="submit" class="btn btn-success">Cadastrar Usuário</button>
-      </form>
-      <ul id="listaUsuarios"></ul>
-      <button class="close-btn" data-close="modalGerenciarUsuarios">Fechar</button>
-      <div id="messageUsuarios" class="message"></div>
-    </section>
+    <!-- MODAL: Gerenciar Usuários -->
+    <section id="modalGerenciarUsuarios" class="hidden modal">
+      <h2>Gerenciamento de Usuários</h2>
+      <form id="formCadastroUsuario">
+        <input type="text" id="inputUsuarioNome" placeholder="Nome do Usuário" required />
+        <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
+        <select id="inputUsuarioTipo" required>
+          <option value="administrador">Administrador</option>
+          <option value="usuario">Usuário</option>
+        </select>
+        <button type="submit" class="btn btn-success">Cadastrar Usuário</button>
+      </form>
+      <ul id="listaUsuarios"></ul>
+      <button class="close-btn" data-close="modalGerenciarUsuarios">Fechar</button>
+      <div id="messageUsuarios" class="message"></div>
+    </section>
 
-        <section id="dashboardConteudo">
-      <h2>Check-in</h2>
-      <ul id="listaCheckin"></ul>
-      <div id="checkinMessage" class="message"></div>
+    <!-- CONTEÚDO PRINCIPAL -->
+    <section id="dashboardConteudo">
+      <h2>Check-in</h2>
+      <ul id="listaCheckin"></ul>
+      <div id="checkinMessage" class="message"></div>
 
-      <h2>Check-out</h2>
-      <ul id="listaCheckout"></ul>
-      <div id="checkoutMessage" class="message"></div>
+      <h2>Check-out</h2>
+      <ul id="listaCheckout"></ul>
+      <div id="checkoutMessage" class="message"></div>
 
-      <h2>Estatísticas do Dia</h2>
-      <ul>
-        <li>Crianças Cadastradas: <span id="statCadastradas">0</span></li>
-        <li>Presentes Hoje: <span id="statPresentes">0</span></li>
-        <li>Check-ins Hoje: <span id="statCheckins">0</span></li>
-        <li>Check-outs Hoje: <span id="statCheckouts">0</span></li>
-      </ul>
-    </section>
-  </section>
+      <h2>Estatísticas do Dia</h2>
+      <ul>
+        <li>Crianças Cadastradas: <span id="statCadastradas">0</span></li>
+        <li>Presentes Hoje: <span id="statPresentes">0</span></li>
+        <li>Check-ins Hoje: <span id="statCheckins">0</span></li>
+        <li>Check-outs Hoje: <span id="statCheckouts">0</span></li>
+      </ul>
+    </section>
+  </section>
 
-    <div id="installPrompt" class="hidden">
-    <button id="btnInstalarApp" class="btn btn-primary">Instalar App</button>
-  </div>
+  <!-- BOTÃO DE INSTALAÇÃO -->
+  <div id="installPrompt" class="hidden">
+    <button id="btnInstalarApp" class="btn btn-primary">Instalar App</button>
+  </div>
 
-    <div id="message" class="message hidden"></div>
+  <div id="message" class="message hidden"></div>
 
-  <script src="/frontend.js"></script>
+  <script src="/frontend.js"></script>
+  <script>
+    // Garante que sempre começa ocultando dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('dashboardSection').classList.add('hidden');
+      document.getElementById('loginSection').classList.remove('hidden');
+      if (typeof checkLoginStatus === 'function') {
+        checkLoginStatus();
+      }
+    });
+  </script>
 </body>
 </html>
