@@ -3,127 +3,187 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="stylesheet" href="/style.css" />
-  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
   <title>Kids Guardian</title>
 
-  <!-- Garantir que elementos ocultos realmente fiquem invisíveis -->
-  <style>
-    .hidden {
-      display: none !important;
-    }
-  </style>
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f4c81" />
+
+  <!-- Ícones -->
+  <link rel="icon" href="icons/icon-192.png" type="image/png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- LOGIN -->
-  <main id="loginSection" class="centered login-section">
+  <!-- Login -->
+  <main id="loginSection" class="login-section">
     <form id="formLogin" class="login-form">
-      <h2>Login</h2>
-      <input type="text" id="inputLoginUsuario" placeholder="Usuário" required />
-      <input type="password" id="inputLoginSenha" placeholder="Senha" required />
-      <button type="submit" class="btn btn-primary">Entrar</button>
+      <h2>Fazer Login</h2>
       <div id="loginMessage" class="message"></div>
+
+      <div class="form-group">
+        <label for="inputLoginUsuario">Usuário</label>
+        <div class="input-icon-group">
+          <span class="icon">👤</span>
+          <input type="text" id="inputLoginUsuario" placeholder="Digite seu usuário" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="inputLoginSenha">Senha</label>
+        <div class="input-icon-group">
+          <span class="icon">🔒</span>
+          <input type="password" id="inputLoginSenha" placeholder="Digite sua senha" required />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Entrar</button>
     </form>
   </main>
 
-  <!-- DASHBOARD (inicialmente oculto) -->
+  <!-- Dashboard -->
   <section id="dashboardSection" class="hidden">
     <header class="header">
       <h1>Kids Guardian</h1>
+      <p>🏠 Ministério Infantil - Aliança</p>
       <div>
-        Usuário: <span id="displayUsuarioLogado"></span> (<span id="displayCargoUsuario"></span>)
+        Usuário: <span id="displayUsuarioLogado"></span>
+        (<span id="displayCargoUsuario"></span>)
       </div>
       <button id="btnLogout" class="btn btn-danger">Sair</button>
     </header>
 
     <nav>
-      <button id="btnAbrirCadastroCrianca" class="btn btn-primary">Cadastro de Criança</button>
-      <button id="btnAbrirRelatorio" class="btn btn-info">Relatório</button>
+      <button id="btnAbrirCadastroCrianca" class="btn btn-primary">Cadastrar Criança</button>
+      <button id="btnAbrirRelatorio" class="btn btn-info">Relatório do Dia</button>
       <button id="btnAbrirGerenciarUsuarios" class="btn btn-secondary admin-only" style="display:none;">Gerenciar Usuários</button>
     </nav>
 
-    <!-- MODAL: Cadastro Criança -->
-    <section id="modalCadastroCrianca" class="hidden modal">
-      <h2>Cadastro de Criança</h2>
-      <form id="formCadastroCrianca">
-        <input type="text" id="inputCriancaNome" placeholder="Nome da Criança" required />
-        <input type="text" id="inputCriancaResponsavel" placeholder="Responsável" required />
-        <input type="text" id="inputCriancaNumero" placeholder="Telefone Responsável" required />
-        <input type="number" id="inputCriancaIdade" placeholder="Idade" required />
-        <input type="number" id="inputCriancaSala" placeholder="Sala" required />
-        <textarea id="inputCriancaObs" placeholder="Observações"></textarea>
-        <button type="submit" class="btn btn-success">Cadastrar</button>
-      </form>
-      <button class="close-btn" data-close="modalCadastroCrianca">Fechar</button>
-      <div id="messageCadastroCrianca" class="message"></div>
-    </section>
+    <section id="dashboardConteudo" class="dashboard">
+      <div class="dashboard-grid">
+        <div class="dashboard-panel check-io-lists">
+          <div>
+            <h2>Check-in</h2>
+            <div id="checkinMessage" class="message"></div>
+            <ul id="listaCheckin" class="crianca-list"></ul>
+          </div>
+          <div>
+            <h2>Check-out</h2>
+            <div id="checkoutMessage" class="message"></div>
+            <ul id="listaCheckout" class="crianca-list"></ul>
+          </div>
+        </div>
 
-    <!-- MODAL: Relatório -->
-    <section id="modalRelatorio" class="hidden modal">
-      <h2>Relatório de Check-ins</h2>
-      <form id="formRelatorio">
-        <input type="date" id="inputDataRelatorio" />
-        <button type="submit" class="btn btn-info">Gerar Relatório</button>
-      </form>
-      <div id="relatorioConteudo"></div>
-      <button class="close-btn" data-close="modalRelatorio">Fechar</button>
-    </section>
-
-    <!-- MODAL: Gerenciar Usuários -->
-    <section id="modalGerenciarUsuarios" class="hidden modal">
-      <h2>Gerenciamento de Usuários</h2>
-      <form id="formCadastroUsuario">
-        <input type="text" id="inputUsuarioNome" placeholder="Nome do Usuário" required />
-        <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
-        <select id="inputUsuarioTipo" required>
-          <option value="administrador">Administrador</option>
-          <option value="usuario">Usuário</option>
-        </select>
-        <button type="submit" class="btn btn-success">Cadastrar Usuário</button>
-      </form>
-      <ul id="listaUsuarios"></ul>
-      <button class="close-btn" data-close="modalGerenciarUsuarios">Fechar</button>
-      <div id="messageUsuarios" class="message"></div>
-    </section>
-
-    <!-- CONTEÚDO PRINCIPAL -->
-    <section id="dashboardConteudo">
-      <h2>Check-in</h2>
-      <ul id="listaCheckin"></ul>
-      <div id="checkinMessage" class="message"></div>
-
-      <h2>Check-out</h2>
-      <ul id="listaCheckout"></ul>
-      <div id="checkoutMessage" class="message"></div>
-
-      <h2>Estatísticas do Dia</h2>
-      <ul>
-        <li>Crianças Cadastradas: <span id="statCadastradas">0</span></li>
-        <li>Presentes Hoje: <span id="statPresentes">0</span></li>
-        <li>Check-ins Hoje: <span id="statCheckins">0</span></li>
-        <li>Check-outs Hoje: <span id="statCheckouts">0</span></li>
-      </ul>
+        <div class="dashboard-panel stats-section">
+          <h3>Estatísticas</h3>
+          <div class="stats-grid">
+            <div><p>Cadastradas</p><span id="statCadastradas">0</span></div>
+            <div><p>Presentes Hoje</p><span id="statPresentes">0</span></div>
+            <div><p>Check-ins</p><span id="statCheckins">0</span></div>
+            <div><p>Check-outs</p><span id="statCheckouts">0</span></div>
+          </div>
+        </div>
+      </div>
     </section>
   </section>
 
-  <!-- BOTÃO DE INSTALAÇÃO -->
-  <div id="installPrompt" class="hidden">
-    <button id="btnInstalarApp" class="btn btn-primary">Instalar App</button>
+  <!-- Modal Cadastro Criança -->
+  <div id="modalCadastroCrianca" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" data-close="modalCadastroCrianca">&times;</span>
+      <h2>Cadastrar Criança</h2>
+      <div id="messageCadastroCrianca" class="message"></div>
+      <form id="formCadastroCrianca">
+        <div class="form-group">
+          <label for="inputCriancaNome">Nome</label>
+          <input type="text" id="inputCriancaNome" placeholder="Nome" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaResponsavel">Responsável</label>
+          <input type="text" id="inputCriancaResponsavel" placeholder="Responsável" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaNumero">Telefone</label>
+          <input type="text" id="inputCriancaNumero" placeholder="Telefone" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaIdade">Idade</label>
+          <input type="number" id="inputCriancaIdade" placeholder="Idade" required />
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaSala">Sala</label>
+          <select id="inputCriancaSala" required>
+            <option value="">Selecione a sala</option>
+            <option value="1">Sala 1 (0-3)</option>
+            <option value="2">Sala 2 (4-6)</option>
+            <option value="3">Sala 3 (7-9)</option>
+            <option value="4">Sala 4 (10-12)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputCriancaObs">Observações</label>
+          <textarea id="inputCriancaObs" placeholder="Observações"></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Salvar</button>
+      </form>
+    </div>
   </div>
 
-  <div id="message" class="message hidden"></div>
+  <!-- Modal Relatório -->
+  <div id="modalRelatorio" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" data-close="modalRelatorio">&times;</span>
+      <h2>Relatório do Dia</h2>
+      <div id="messageRelatorio" class="message"></div>
+      <div class="form-group">
+        <label for="inputDataRelatorio">Data</label>
+        <input type="date" id="inputDataRelatorio" required />
+      </div>
+      <button id="btnGerarRelatorio" class="btn btn-success">Gerar</button>
+      <button id="btnExportarRelatorio" class="btn btn-secondary">Exportar</button>
+      <pre id="relatorioConteudo" class="report-content"></pre>
+    </div>
+  </div>
 
-  <script src="/frontend.js"></script>
-  <script>
-    // Garante que sempre começa ocultando dashboard
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('dashboardSection').classList.add('hidden');
-      document.getElementById('loginSection').classList.remove('hidden');
-      if (typeof checkLoginStatus === 'function') {
-        checkLoginStatus();
-      }
-    });
-  </script>
+  <!-- Modal Gerenciar Usuários -->
+  <div id="modalGerenciarUsuarios" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" data-close="modalGerenciarUsuarios">&times;</span>
+      <h2>Gerenciar Usuários</h2>
+      <div id="messageUsuarios" class="message"></div>
+      <form id="formCadastroUsuario">
+        <div class="form-group">
+          <label for="inputUsuarioNome">Nome</label>
+          <input type="text" id="inputUsuarioNome" placeholder="Nome" required />
+        </div>
+        <div class="form-group">
+          <label for="inputUsuarioSenha">Senha</label>
+          <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
+        </div>
+        <div class="form-group">
+          <label for="inputUsuarioTipo">Tipo</label>
+          <select id="inputUsuarioTipo" required>
+            <option value="">Selecione o tipo</option>
+            <option value="administrador">Administrador</option>
+            <option value="voluntario">Voluntário</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Adicionar</button>
+      </form>
+      <ul id="listaUsuarios" class="user-list"></ul>
+    </div>
+  </div>
+
+  <!-- Botão Instalar PWA -->
+  <div style="margin-top: 1rem; text-align: center;">
+    <button id="btnInstalarApp" style="display: none;" class="btn btn-install">
+      📲 Instalar App
+    </button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="frontend.js"></script>
 </body>
 </html>
