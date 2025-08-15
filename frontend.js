@@ -45,7 +45,6 @@ async function makeApiRequest(endpoint, method, data = null) {
       body: data ? JSON.stringify(data) : null,
     });
 
-    // Verificação de sessão expirada
     if (response.status === 401 || response.status === 403) {
       localStorage.clear();
       checkLoginStatus();
@@ -218,13 +217,25 @@ async function carregarEstatisticas() {
 async function checkinCrianca(id) {
   const res = await makeApiRequest('/registros/checkin', 'POST', { crianca_id: id });
   showMessage('checkinMessage', res.message || 'Erro no check-in.', res.success ? 'success' : 'error');
-  if (res.success) carregarDadosDashboard();
+  if (res.success) {
+    // Remove do check-in
+    document.querySelector(`#listaCheckin li button[data-id="${id}"]`)?.closest('li')?.remove();
+    // Atualiza checkout e estatísticas
+    await carregarListaCheckout();
+    await carregarEstatisticas();
+  }
 }
 
 async function checkoutCrianca(id) {
   const res = await makeApiRequest('/registros/checkout', 'POST', { crianca_id: id });
   showMessage('checkoutMessage', res.message || 'Erro no check-out.', res.success ? 'success' : 'error');
-  if (res.success) carregarDadosDashboard();
+  if (res.success) {
+    // Remove do checkout
+    document.querySelector(`#listaCheckout li button[data-id="${id}"]`)?.closest('li')?.remove();
+    // Atualiza check-in e estatísticas
+    await carregarListaCheckin();
+    await carregarEstatisticas();
+  }
 }
 
 async function removerCrianca(id) {
@@ -304,7 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAbrirRelatorio = getEl('btnAbrirRelatorio');
   const btnAbrirGerenciarUsuarios = getEl('btnAbrirGerenciarUsuarios');
 
-  // Verifica status de login na inicialização
   checkLoginStatus();
 
   if (btnAbrirCadastroCrianca) btnAbrirCadastroCrianca.addEventListener('click', () => openModal('modalCadastroCrianca'));
