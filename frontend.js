@@ -316,6 +316,7 @@ async function removerUsuario(id) {
 }
 
 // ==== RELATÓRIO ====
+// Gerar Relatório
 async function gerarRelatorio(dia) {
   const token = localStorage.getItem('token');
   const dataConsulta = dia || new Date().toISOString().slice(0, 10);
@@ -329,17 +330,35 @@ async function gerarRelatorio(dia) {
     if (!res.ok) throw new Error(await res.text());
 
     const data = await res.json();
-    const relatorio = data.relatorio || [];
+    relatorioAtual = data.relatorio || [];
     const container = getEl('relatorioConteudo');
 
     if (!container) return;
-    container.textContent = relatorio.length
-      ? JSON.stringify(relatorio, null, 2)
+    container.textContent = relatorioAtual.length
+      ? JSON.stringify(relatorioAtual, null, 2)
       : 'Nenhum dado encontrado para o relatório.';
   } catch (erro) {
     console.error('Erro ao gerar relatório:', erro);
     alert('Erro ao gerar relatório. Verifique se está logado e a rota está correta.');
   }
+}
+
+// Exportar Relatório
+function exportarRelatorio() {
+  if (!relatorioAtual || !relatorioAtual.length) {
+    alert('Não há relatório para exportar.');
+    return;
+  }
+
+  const blob = new Blob([JSON.stringify(relatorioAtual, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `relatorio-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+
+  URL.revokeObjectURL(url);
 }
 
 // ==== PWA ====
@@ -357,12 +376,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const formLogin = getEl('formLogin');
   const formCadastroCrianca = getEl('formCadastroCrianca');
   const formCadastroUsuario = getEl('formCadastroUsuario');
-  const formRelatorio = getEl('formRelatorio');
   const formEditarUsuario = getEl('formEditarUsuario');
 
   const btnAbrirCadastroCrianca = getEl('btnAbrirCadastroCrianca');
   const btnAbrirRelatorio = getEl('btnAbrirRelatorio');
   const btnAbrirGerenciarUsuarios = getEl('btnAbrirGerenciarUsuarios');
+
+  const btnGerarRelatorio = getEl('btnGerarRelatorio');
+  const btnExportarRelatorio = getEl('btnExportarRelatorio');
 
   checkLoginStatus();
 
@@ -409,12 +430,15 @@ document.addEventListener('DOMContentLoaded', () => {
     formEditarUsuario.addEventListener('submit', salvarEdicaoUsuario);
   }
 
-  if (formRelatorio) {
-    formRelatorio.addEventListener('submit', e => {
-      e.preventDefault();
+  if (btnGerarRelatorio) {
+    btnGerarRelatorio.addEventListener('click', () => {
       const data = getEl('inputDataRelatorio').value;
       gerarRelatorio(data);
     });
+  }
+
+  if (btnExportarRelatorio) {
+    btnExportarRelatorio.addEventListener('click', exportarRelatorio);
   }
 
   // eventos dinâmicos
