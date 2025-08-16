@@ -117,6 +117,7 @@ function checkLoginStatus() {
   closeModal('modalCadastroCrianca');
   closeModal('modalGerenciarUsuarios');
   closeModal('modalRelatorio');
+  closeModal('modalEditarUsuario');
 
   if (token && user) {
     updateDashboardUI();
@@ -218,9 +219,7 @@ async function checkinCrianca(id) {
   const res = await makeApiRequest('/registros/checkin', 'POST', { crianca_id: id });
   showMessage('checkinMessage', res.message || 'Erro no check-in.', res.success ? 'success' : 'error');
   if (res.success) {
-    // Remove do check-in
     document.querySelector(`#listaCheckin li button[data-id="${id}"]`)?.closest('li')?.remove();
-    // Atualiza checkout e estatísticas
     await carregarListaCheckout();
     await carregarEstatisticas();
   }
@@ -230,9 +229,7 @@ async function checkoutCrianca(id) {
   const res = await makeApiRequest('/registros/checkout', 'POST', { crianca_id: id });
   showMessage('checkoutMessage', res.message || 'Erro no check-out.', res.success ? 'success' : 'error');
   if (res.success) {
-    // Remove do checkout
     document.querySelector(`#listaCheckout li button[data-id="${id}"]`)?.closest('li')?.remove();
-    // Atualiza check-in e estatísticas
     await carregarListaCheckin();
     await carregarEstatisticas();
   }
@@ -246,6 +243,8 @@ async function removerCrianca(id) {
 }
 
 // ==== USUÁRIOS ====
+
+// Listar usuários
 async function carregarUsuarios() {
   const res = await makeApiRequest('/usuarios', 'GET');
   const lista = getEl('listaUsuarios');
@@ -262,9 +261,58 @@ async function carregarUsuarios() {
     return;
   }
 
-  renderLista(lista, usuarios, usuario => `
-    ${usuario.nome} - ${usuario.email || usuario.username || 'N/A'}
-  `, 'Nenhum usuário encontrado.');
+  renderLista(
+    lista,
+    usuarios,
+    usuario => `
+      <span><b>${usuario.nome}</b> - ${usuario.tipo} (${usuario.username || usuario.email || 'N/A'})</span>
+      <div class="usuario-actions">
+        <button class="btn btn-small btn-info" data-editar="${usuario.id}">Editar</button>
+        <button class="btn btn-small btn-danger" data-remover-usuario="${usuario.id}">Remover</button>
+      </div>
+    `,
+    'Nenhum usuário encontrado.'
+  );
+}
+
+// Abrir modal para editar usuário
+function editarUsuario(id, usuario) {
+  getEl('inputUsuarioEditNome').value = usuario.nome;
+  getEl('inputUsuarioEditTipo').value = usuario.tipo;
+  getEl('inputUsuarioEditSenha').value = '';
+  getEl('formEditarUsuario').setAttribute('data-id', id);
+  openModal('modalEditarUsuario');
+}
+
+// Salvar edição
+async function salvarEdicaoUsuario(e) {
+  e.preventDefault();
+  const form = e.target;
+  const id = form.getAttribute('data-id');
+
+  const data = {
+    nome: getEl('inputUsuarioEditNome').value,
+    tipo: getEl('inputUsuarioEditTipo').value,
+  };
+
+  const senha = getEl('inputUsuarioEditSenha').value;
+  if (senha) data.senha = senha;
+
+  const res = await makeApiRequest(`/usuarios/${id}`, 'PUT', data);
+  showMessage('messageUsuarios', res.message || 'Erro ao atualizar usuário.', res.success ? 'success' : 'error');
+
+  if (res.success) {
+    closeModal('modalEditarUsuario');
+    carregarUsuarios();
+  }
+}
+
+// Remover usuário
+async function removerUsuario(id) {
+  if (!confirm('Deseja realmente remover este usuário?')) return;
+  const res = await makeApiRequest(`/usuarios/${id}`, 'DELETE');
+  showMessage('messageUsuarios', res.message || 'Erro ao remover usuário.', res.success ? 'success' : 'error');
+  if (res.success) carregarUsuarios();
 }
 
 // ==== RELATÓRIO ====
@@ -310,6 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const formCadastroCrianca = getEl('formCadastroCrianca');
   const formCadastroUsuario = getEl('formCadastroUsuario');
   const formRelatorio = getEl('formRelatorio');
+  const formEditarUsuario = getEl('formEditarUsuario');
 
   const btnAbrirCadastroCrianca = getEl('btnAbrirCadastroCrianca');
   const btnAbrirRelatorio = getEl('btnAbrirRelatorio');
@@ -319,7 +368,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnAbrirCadastroCrianca) btnAbrirCadastroCrianca.addEventListener('click', () => openModal('modalCadastroCrianca'));
   if (btnAbrirRelatorio) btnAbrirRelatorio.addEventListener('click', () => openModal('modalRelatorio'));
-  if (btnAbrirGerenciarUsuarios) btnAbrirGerenciarUsuarios.addEventListener('click', () => openModal('modalGerenciarUsuarios'));
+  if (btnAbrirGerenciarUsuarios) btnAbrirGerenciarUsuarios.addEventListener('click', () => {
+    openModal('modalGerenciarUsuarios');
+    carregarUsuarios();
+  });
 
   if (btnLogout) btnLogout.addEventListener('click', logoutUsuario);
 
@@ -353,6 +405,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (formEditarUsuario) {
+    formEditarUsuario.addEventListener('submit', salvarEdicaoUsuario);
+  }
+
   if (formRelatorio) {
     formRelatorio.addEventListener('submit', e => {
       e.preventDefault();
@@ -361,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // eventos dinâmicos
   document.body.addEventListener('click', e => {
     if (e.target.matches('.btn-checkin')) {
       const id = e.target.getAttribute('data-id');
@@ -371,6 +428,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.target.matches('[data-remover]')) {
       const id = e.target.getAttribute('data-id');
       if (id) removerCrianca(id);
+    } else if (e.target.matches('[data-remover-usuario]')) {
+      const id = e.target.getAttribute('data-remover-usuario');
+      if (id) removerUsuario(id);
+    } else if (e.target.matches('[data-editar]')) {
+      const id = e.target.getAttribute('data-editar');
+      makeApiRequest(`/usuarios/${id}`, 'GET').then(res => {
+        if (res.success && res.usuario) editarUsuario(id, res.usuario);
+        else showMessage('messageUsuarios', 'Erro ao carregar dados do usuário.', 'error');
+      });
     } else if (e.target.classList.contains('close-btn')) {
       const modalId = e.target.getAttribute('data-close');
       if (modalId) closeModal(modalId);
