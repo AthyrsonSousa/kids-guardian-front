@@ -131,6 +131,17 @@ body {
   font-size: 0.8rem;
 }
 
+.btn-install {
+  background-color: var(--color-info-button);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--btn-border-radius);
+  font-size: 1rem;
+}
+.btn-install:hover {
+  background-color: var(--color-info-button-hover);
+}
+
 /* ========================
    Login
 ======================== */
@@ -283,6 +294,14 @@ body {
   margin-top: var(--spacing-sm);
   background: var(--color-danger-button);
   color: white;
+  border: none;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--btn-border-radius);
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: var(--color-danger-button-hover);
 }
 
 /* ========================
@@ -308,6 +327,22 @@ body {
 .user-actions {
   display: flex;
   gap: var(--spacing-xs);
+}
+
+/* ========================
+   Relatório
+======================== */
+.report-content {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.9rem;
+  margin-top: var(--spacing-sm);
 }
 
 /* ========================
