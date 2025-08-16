@@ -147,34 +147,40 @@
     </div>
   </div>
 
-  <!-- Modal Gerenciar Usuários -->
-  <div id="modalGerenciarUsuarios" class="modal hidden">
-    <div class="modal-content">
-      <span class="close-btn" data-close="modalGerenciarUsuarios">&times;</span>
-      <h2>Gerenciar Usuários</h2>
-      <div id="messageUsuarios" class="message"></div>
-      <form id="formCadastroUsuario">
-        <div class="form-group">
-          <label for="inputUsuarioNome">Nome</label>
-          <input type="text" id="inputUsuarioNome" placeholder="Nome" required />
-        </div>
-        <div class="form-group">
-          <label for="inputUsuarioSenha">Senha</label>
-          <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
-        </div>
-        <div class="form-group">
-          <label for="inputUsuarioTipo">Tipo</label>
-          <select id="inputUsuarioTipo" required>
-            <option value="">Selecione o tipo</option>
-            <option value="administrador">Administrador</option>
-            <option value="voluntario">Voluntário</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Adicionar</button>
-      </form>
-      <ul id="listaUsuarios" class="user-list"></ul>
-    </div>
+ <!-- Modal Gerenciar Usuários -->
+<div id="modalGerenciarUsuarios" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-btn" data-close="modalGerenciarUsuarios">&times;</span>
+    <h2>Gerenciar Usuários</h2>
+    <div id="messageUsuarios" class="message"></div>
+
+    <!-- Cadastro de novo usuário -->
+    <form id="formCadastroUsuario">
+      <div class="form-group">
+        <label for="inputUsuarioNome">Nome</label>
+        <input type="text" id="inputUsuarioNome" placeholder="Nome" required />
+      </div>
+      <div class="form-group">
+        <label for="inputUsuarioSenha">Senha</label>
+        <input type="password" id="inputUsuarioSenha" placeholder="Senha" required />
+      </div>
+      <div class="form-group">
+        <label for="inputUsuarioTipo">Tipo</label>
+        <select id="inputUsuarioTipo" required>
+          <option value="">Selecione o tipo</option>
+          <option value="administrador">Administrador</option>
+          <option value="voluntario">Voluntário</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Adicionar</button>
+    </form>
+
+    <!-- Lista de usuários já cadastrados -->
+    <h3>Usuários Cadastrados</h3>
+    <ul id="listaUsuarios" class="user-list">
+    </ul>
   </div>
+</div>
 
   <!-- Botão Instalar PWA -->
   <div style="margin-top: 1rem; text-align: center;">
